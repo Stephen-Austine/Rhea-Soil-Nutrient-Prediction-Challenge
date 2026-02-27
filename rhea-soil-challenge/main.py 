@@ -1,7 +1,3 @@
-"""
-Rhea Soil Nutrient Prediction - Core ML Pipeline
-Open-source, reproducible, competition-compliant
-"""
 import pandas as pd
 import numpy as np
 import warnings
