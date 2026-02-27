@@ -1,0 +1,54 @@
+{
+  "description": "This is a system generated manifest of files expected to be present in this zip. It can be safely deleted.",
+  "metadata": {
+    "generated_at": "2026-02-10T16:47:26+00:00",
+    "trigger": {
+      "file_hashid": "unknown",
+      "action": "unknown"
+    }
+  },
+  "manifest": [
+    {
+      "filename": "Sample_Collection_Dates.csv",
+      "filesize": 1756837,
+      "description": "This file contains all the sample collection dates for both training and test sets.",
+      "created_at": "2026-02-10 16:47:16 UTC",
+      "updated_at": "2026-02-10 16:47:26 UTC"
+    },
+    {
+      "filename": "SampleSubmission.csv",
+      "filesize": 358258,
+      "description": "This file shows the required submission format.",
+      "created_at": "2026-02-04 15:14:42 UTC",
+      "updated_at": "2026-02-04 15:14:50 UTC"
+    },
+    {
+      "filename": "TargetPred_To_Keep.csv",
+      "filesize": 200347,
+      "description": "This file shows all the entries with existing targets represented by 1.",
+      "created_at": "2026-02-04 15:15:29 UTC",
+      "updated_at": "2026-02-04 15:15:35 UTC"
+    },
+    {
+      "filename": "Train.csv",
+      "filesize": 6225518,
+      "description": "This is the dataset which should be used, in addition to the extra data downloaded, for training.",
+      "created_at": "2026-02-04 15:15:53 UTC",
+      "updated_at": "2026-02-04 15:16:06 UTC"
+    },
+    {
+      "filename": "TestSet.csv",
+      "filesize": 496425,
+      "description": "The file should be used to make predictions after training.",
+      "created_at": "2026-02-04 15:15:06 UTC",
+      "updated_at": "2026-02-04 15:15:24 UTC"
+    },
+    {
+      "filename": "data_dictionary.csv",
+      "filesize": 1641,
+      "description": "This file describe the dataset. Pay attention to the unit.",
+      "created_at": "2026-02-04 15:36:45 UTC",
+      "updated_at": "2026-02-04 15:39:22 UTC"
+    }
+  ]
+}
