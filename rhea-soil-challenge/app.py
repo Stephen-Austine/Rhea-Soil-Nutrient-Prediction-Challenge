@@ -307,52 +307,7 @@ st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
 # ============= SECTION CONTENT BASED ON NAVIGATION =============
 all_nutrients = ['Al', 'B', 'Ca', 'Cu', 'Fe', 'K', 'Mg', 'Mn', 'N', 'Na', 'P', 'S', 'Zn']
 
-# ----- SECTION 1: EXPLORE DATA -----
-if st.session_state.current_section == 'explore':
-    # ============= DATASET OVERVIEW =============
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📊 Dataset Overview")
-    
-    col1, col2, col3, col4 = st.columns(4, gap="medium")
 
-    with col1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">📈 Train Samples</div>
-            <div class="metric-value">{len(train):,}</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Soil observations</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">🎯 Test Samples</div>
-            <div class="metric-value">{len(test):,}</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Locations to predict</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col3:
-        st.markdown("""
-        <div class="metric-card">
-            <div class="metric-label">🧪 Nutrients</div>
-            <div class="metric-value">13</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Al,B,Ca,Cu,Fe,K,Mg,Mn,N,Na,P,S,Zn</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col4:
-        st.markdown("""
-        <div class="metric-card">
-            <div class="metric-label">⏰ Deadline</div>
-            <div class="metric-value">7 days</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">March 6, 2026</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
 
 # ----- SECTION 2: ANALYZE NEW DATA -----
 if st.session_state.current_section == 'analyze':
@@ -360,13 +315,101 @@ if st.session_state.current_section == 'analyze':
     st.markdown("### 🔍 Analyze New Data")
     st.write("Debug: Analyze section is being rendered")
     
-    # Input Method Selection
+    # Input Method Selection - Clickable Card Buttons
     st.markdown("#### 📋 Input Method")
-    input_method = st.radio(
-        "Choose how to input soil data:",
-        ["Manual Entry", "Upload File (CSV/JSON)"],
-        horizontal=True
-    )
+    
+    # Initialize input method in session state if not present
+    if 'input_method_choice' not in st.session_state:
+        st.session_state.input_method_choice = "Manual Entry"
+    
+    # Create clickable card buttons
+    col1, col2 = st.columns(2, gap="large")
+    
+    with col1:
+        is_manual = st.session_state.input_method_choice == "Manual Entry"
+        if is_manual:
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                border-radius: 16px;
+                padding: 28px;
+                border: 2px solid #3b82f6;
+                box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+                text-align: center;
+            ">
+                <div style="font-size: 52px; margin-bottom: 16px;">✏️</div>
+                <div style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+                    Manual Entry
+                </div>
+                <div style="font-size: 14px; color: #ffffff; opacity: 0.95; line-height: 1.6;">
+                    Enter soil parameters manually through an interactive form
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            if st.button("✏️ Manual Entry", key="btn_manual", use_container_width=True):
+                st.session_state.input_method_choice = "Manual Entry"
+                st.rerun()
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                border-radius: 16px;
+                padding: 20px;
+                border: 2px solid transparent;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+                text-align: center;
+                margin-top: -10px;
+            ">
+                <div style="font-size: 14px; color: #64748b; line-height: 1.6;">
+                    Enter soil parameters manually through an interactive form
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    with col2:
+        is_upload = st.session_state.input_method_choice == "Upload File (CSV/JSON)"
+        if is_upload:
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                border-radius: 16px;
+                padding: 28px;
+                border: 2px solid #3b82f6;
+                box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+                text-align: center;
+            ">
+                <div style="font-size: 52px; margin-bottom: 16px;">📁</div>
+                <div style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+                    Upload File
+                </div>
+                <div style="font-size: 14px; color: #ffffff; opacity: 0.95; line-height: 1.6;">
+                    Import data from CSV or JSON files for batch analysis
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            if st.button("📁 Upload File", key="btn_upload", use_container_width=True):
+                st.session_state.input_method_choice = "Upload File (CSV/JSON)"
+                st.rerun()
+            st.markdown("""
+            <div style="
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                border-radius: 16px;
+                padding: 20px;
+                border: 2px solid transparent;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+                text-align: center;
+                margin-top: -10px;
+            ">
+                <div style="font-size: 14px; color: #64748b; line-height: 1.6;">
+                    Import data from CSV or JSON files for batch analysis
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Get current selection
+    input_method = st.session_state.input_method_choice
+    
     st.markdown('</div>', unsafe_allow_html=True)
     
     uploaded_df = None
@@ -405,11 +448,11 @@ if st.session_state.current_section == 'analyze':
         col1, col2, col3 = st.columns(3, gap="medium")
         
         with col1:
-            sand = st.slider("Sand Content (%)", 0, 100, 50, help="Sand percentage in soil")
-            clay = st.slider("Clay Content (%)", 0, 100, 20, help="Clay percentage in soil")
+            sand = st.number_input("Sand Content (%)", value=50.0, format="%.1f", min_value=0.0, max_value=100.0, help="Sand percentage in soil")
+            clay = st.number_input("Clay Content (%)", value=20.0, format="%.1f", min_value=0.0, max_value=100.0, help="Clay percentage in soil")
         
         with col2:
-            silt = st.slider("Silt Content (%)", 0, 100, 30, help="Silt percentage in soil")
+            silt = st.number_input("Silt Content (%)", value=30.0, format="%.1f", min_value=0.0, max_value=100.0, help="Silt percentage in soil")
             electrical_conductivity = st.number_input("EC (dS/m)", value=0.5, format="%.3f", help="Electrical conductivity")
         
         with col3:
@@ -472,6 +515,9 @@ if st.session_state.current_section == 'analyze':
                 try:
                     from main import SoilNutrientPredictor
                     
+                    # Increment files analyzed counter
+                    st.session_state.files_analyzed += 1
+                    
                     predictor = SoilNutrientPredictor()
                     predictor.load('models/')
                     
@@ -504,6 +550,53 @@ if st.session_state.current_section == 'analyze':
                         mime="text/csv",
                         use_container_width=True
                     )
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Model accuracy card
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("#### 📊 Model Performance")
+                    
+                    # Calculate average RMSE from training metadata
+                    import json
+                    with open('models/metadata.json', 'r') as f:
+                        metadata = json.load(f)
+                    
+                    training_results = metadata.get('training_results', {})
+                    if training_results:
+                        cv_rmses = [result['cv_rmse'] for nutrient, result in training_results.items()]
+                        avg_rmse = sum(cv_rmses) / len(cv_rmses)
+                        
+                        st.markdown(f"""
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem;">
+                            <div>
+                                <div style="font-size: 0.9rem; color: #666; font-weight: 600;">Average CV RMSE</div>
+                                <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">{avg_rmse:.2f}</div>
+                                <div style="font-size: 0.8rem; color: #666;">Lower value = better accuracy</div>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: #e0f2fe; border-radius: 12px;">
+                                <div style="font-size: 2rem;">📈</div>
+                                <div style="font-size: 0.85rem; color: #0369a1;">Model Accuracy</div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Display individual nutrient RMSE values
+                        st.markdown("<div style='margin-top: 1.5rem;'>", unsafe_allow_html=True)
+                        st.markdown("##### Nutrient-wise Performance")
+                        
+                        col1, col2, col3 = st.columns(3)
+                        for i, (nutrient, result) in enumerate(training_results.items()):
+                            with [col1, col2, col3][i % 3]:
+                                st.markdown(f"""
+                                <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #3b82f6; margin: 0.5rem 0;">
+                                    <div style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{nutrient}</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">{result['cv_rmse']:.2f}</div>
+                                    <div style="font-size: 0.75rem; color: #666;">RMSE</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
                     
                     st.markdown('</div>', unsafe_allow_html=True)
                     
@@ -560,6 +653,53 @@ if st.session_state.current_section == 'analyze':
                             <div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;">mg/kg</div>
                         </div>
                         """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Model accuracy card
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                st.markdown("#### 📊 Model Performance")
+                
+                # Calculate average RMSE from training metadata
+                import json
+                with open('models/metadata.json', 'r') as f:
+                    metadata = json.load(f)
+                
+                training_results = metadata.get('training_results', {})
+                if training_results:
+                    cv_rmses = [result['cv_rmse'] for nutrient, result in training_results.items()]
+                    avg_rmse = sum(cv_rmses) / len(cv_rmses)
+                    
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem;">
+                        <div>
+                            <div style="font-size: 0.9rem; color: #666; font-weight: 600;">Average CV RMSE</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">{avg_rmse:.2f}</div>
+                            <div style="font-size: 0.8rem; color: #666;">Lower value = better accuracy</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background: #e0f2fe; border-radius: 12px;">
+                            <div style="font-size: 2rem;">📈</div>
+                            <div style="font-size: 0.85rem; color: #0369a1;">Model Accuracy</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Display individual nutrient RMSE values
+                    st.markdown("<div style='margin-top: 1.5rem;'>", unsafe_allow_html=True)
+                    st.markdown("##### Nutrient-wise Performance")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    for i, (nutrient, result) in enumerate(training_results.items()):
+                        with [col1, col2, col3][i % 3]:
+                            st.markdown(f"""
+                            <div style="padding: 0.75rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #3b82f6; margin: 0.5rem 0;">
+                                <div style="font-size: 0.9rem; font-weight: 600; color: #1e293b;">{nutrient}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">{result['cv_rmse']:.2f}</div>
+                                <div style="font-size: 0.75rem; color: #666;">RMSE</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
                 
                 st.markdown('</div>', unsafe_allow_html=True)
                 
@@ -630,8 +770,59 @@ if st.session_state.current_section == 'analyze':
 
 # ----- SECTION 2: EXPLORE DATA -----
 if st.session_state.current_section == 'explore':
+    # ============= DATASET OVERVIEW =============
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 📊 Dataset Overview")
+    
+    col1, col2, col3, col4 = st.columns(4, gap="medium")
+
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">📈 Train Samples</div>
+            <div class="metric-value">{len(train):,}</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Soil observations</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">🎯 Test Samples</div>
+            <div class="metric-value">{len(test):,}</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Locations to predict</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown("""
+        <div class="metric-card">
+            <div class="metric-label">🧪 Nutrients</div>
+            <div class="metric-value">13</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Al,B,Ca,Cu,Fe,K,Mg,Mn,N,Na,P,S,Zn</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col4:
+        # Track number of files analyzed
+        if 'files_analyzed' not in st.session_state:
+            st.session_state.files_analyzed = 0
+        
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-label">📊 Files Analyzed</div>
+            <div class="metric-value">{st.session_state.files_analyzed}</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">New data files processed</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    
+    # ============= EXPLORE & ANALYZE DATA =============
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("### 🔍 Explore & Analyze Data")
+    st.write("Debug: Explore section is being rendered")
     
     if train is not None:
         # Row 1: Two visualizations side by side
@@ -641,23 +832,41 @@ if st.session_state.current_section == 'explore':
             st.markdown('<div class="glass-card">', unsafe_allow_html=True)
             st.markdown("#### 🗺️ Geographic Distribution")
             
-            sample_size = min(2000, len(train))
-            train_sample = train.sample(sample_size, random_state=42)
-            color_col = 'N' if 'N' in train_sample.columns else train_sample.columns[2]
-            
-            fig_map = px.scatter_mapbox(
-                train_sample,
-                lat="Latitude", lon="Longitude", color=color_col,
-                zoom=3, height=500, mapbox_style="open-street-map",
-                color_continuous_scale="Viridis",
-                title=f"Spatial Distribution of {color_col} Concentration"
-            )
-            fig_map.update_layout(
-                margin=dict(t=40, b=0, l=0, r=0),
-                plot_bgcolor='rgba(0,0,0,0)',
-                paper_bgcolor='rgba(0,0,0,0)'
-            )
-            st.plotly_chart(fig_map, use_container_width=True)
+            try:
+                sample_size = min(2000, len(train))
+                train_sample = train.sample(sample_size, random_state=42)
+                color_col = 'N' if 'N' in train_sample.columns else train_sample.columns[2]
+                
+                fig_map = px.scatter_mapbox(
+                    train_sample,
+                    lat="Latitude", lon="Longitude", color=color_col,
+                    zoom=3, height=500, mapbox_style="carto-positron",
+                    color_continuous_scale="Viridis",
+                    title=f"Spatial Distribution of {color_col} Concentration"
+                )
+                fig_map.update_layout(
+                    margin=dict(t=40, b=0, l=0, r=0),
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig_map, use_container_width=True)
+            except Exception as e:
+                st.error(f"Could not render map: {str(e)}")
+                # Fallback: Show scatter plot instead of map
+                st.markdown("Showing scatter plot fallback:")
+                fig_fallback = px.scatter(
+                    train_sample,
+                    x="Longitude", y="Latitude", color=color_col,
+                    color_continuous_scale="Viridis",
+                    title=f"Spatial Distribution of {color_col} Concentration"
+                )
+                fig_fallback.update_layout(
+                    height=500,
+                    margin=dict(t=40, b=0, l=0, r=0),
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    paper_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig_fallback, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
@@ -739,7 +948,131 @@ if st.session_state.current_section == 'explore':
                 st.plotly_chart(fig_dist, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
         
-        # Row 3: Statistics table
+        # Row 3: Histograms for key nutrients
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 📊 Nutrient Histograms")
+        
+        key_nutrients = ['N', 'P', 'K', 'Ca', 'Mg']
+        available_key = [n for n in key_nutrients if n in train.columns]
+        
+        if available_key:
+            col1, col2 = st.columns(2)
+            
+            # Color palette for histograms
+            colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+            
+            for i, nutrient in enumerate(available_key):
+                with col1 if i % 2 == 0 else col2:
+                    nutrient_data = train[nutrient].dropna()
+                    if len(nutrient_data) > 0:
+                        fig_hist = px.histogram(
+                            x=nutrient_data,
+                            title=f'Distribution of {nutrient}',
+                            labels={'x': f'{nutrient} (mg/kg)', 'y': 'Count'},
+                            color_discrete_sequence=[colors[i % len(colors)]],
+                            nbins=30
+                        )
+                        fig_hist.update_layout(
+                            height=300,
+                            margin=dict(t=40, b=0, l=0, r=0),
+                            plot_bgcolor='rgba(0,0,0,0)',
+                            paper_bgcolor='rgba(0,0,0,0)'
+                        )
+                        st.plotly_chart(fig_hist, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Row 4: pH vs Nutrient Concentrations
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🟡 pH vs Nutrient Concentrations")
+        
+        # Check for pH column (case-insensitive search)
+        ph_column = None
+        for col in train.columns:
+            if col.lower() == 'ph':
+                ph_column = col
+                break
+        
+        if ph_column:
+            nutrients_to_plot = ['N', 'P', 'K', 'Ca', 'Mg']
+            available_for_ph = [n for n in nutrients_to_plot if n in train.columns]
+            
+            if available_for_ph:
+                col1, col2 = st.columns(2)
+                
+                # Color palette for pH plots
+                colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+                
+                for i, nutrient in enumerate(available_for_ph):
+                    with col1 if i % 2 == 0 else col2:
+                        try:
+                            df_ph = train[[ph_column, nutrient]].dropna()
+                            if len(df_ph) > 0:
+                                fig_ph = px.scatter(
+                                    df_ph,
+                                    x=ph_column,
+                                    y=nutrient,
+                                    title=f'pH vs {nutrient}',
+                                    labels={'ph': 'pH Level', nutrient: f'{nutrient} (mg/kg)'},
+                                    color_discrete_sequence=[colors[i % len(colors)]],
+                                    opacity=0.6
+                                )
+                                fig_ph.update_layout(
+                                    height=300,
+                                    margin=dict(t=40, b=0, l=0, r=0),
+                                    plot_bgcolor='rgba(0,0,0,0)',
+                                    paper_bgcolor='rgba(0,0,0,0)'
+                                )
+                                st.plotly_chart(fig_ph, use_container_width=True)
+                            else:
+                                st.warning(f"No data available for pH vs {nutrient}")
+                        except Exception as e:
+                            st.error(f"Error creating pH vs {nutrient} plot: {str(e)}")
+            else:
+                st.info("No key nutrients available for pH analysis")
+        else:
+            st.warning("pH column not found in dataset")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Row 6: Depth vs Nutrient Concentrations
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 📏 Depth vs Nutrient Concentrations")
+        
+        if 'Depth_cm' in train.columns:
+            nutrients_to_plot = ['N', 'P', 'K', 'Ca', 'Mg']
+            available_for_depth = [n for n in nutrients_to_plot if n in train.columns]
+            
+            if available_for_depth:
+                col1, col2 = st.columns(2)
+                
+                # Color palette for depth plots
+                colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+                
+                for i, nutrient in enumerate(available_for_depth):
+                    with col1 if i % 2 == 0 else col2:
+                        df_depth = train[['Depth_cm', nutrient]].dropna()
+                        if len(df_depth) > 0:
+                            fig_depth = px.scatter(
+                                df_depth,
+                                x='Depth_cm',
+                                y=nutrient,
+                                title=f'Depth vs {nutrient}',
+                                labels={'Depth_cm': 'Depth (cm)', nutrient: f'{nutrient} (mg/kg)'},
+                                color_discrete_sequence=[colors[i % len(colors)]],
+                                opacity=0.6
+                            )
+                            fig_depth.update_layout(
+                                height=300,
+                                margin=dict(t=40, b=0, l=0, r=0),
+                                plot_bgcolor='rgba(0,0,0,0)',
+                                paper_bgcolor='rgba(0,0,0,0)'
+                            )
+                            st.plotly_chart(fig_depth, use_container_width=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Row 7: Statistics table
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### 📋 Summary Statistics")
         
@@ -786,12 +1119,31 @@ elif st.session_state.current_section == 'train':
     # Nutrient selection
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("#### Select Nutrients to Predict")
-    selected = st.multiselect(
-        "Nutrients",
-        all_nutrients,
-        default=all_nutrients,
-        label_visibility="collapsed"
-    )
+    
+    # Initialize session state for nutrient selection if not exists
+    if 'selected_nutrients' not in st.session_state:
+        st.session_state.selected_nutrients = all_nutrients.copy()
+    
+    # Display checkboxes in 3 columns for better readability
+    col1, col2, col3 = st.columns(3)
+    columns = [col1, col2, col3]
+    
+    for i, nutrient in enumerate(all_nutrients):
+        with columns[i % 3]:
+            # Check if nutrient is currently selected
+            is_selected = nutrient in st.session_state.selected_nutrients
+            
+            # Create checkbox
+            if st.checkbox(nutrient, value=is_selected, key=f"nutrient_{nutrient}"):
+                if nutrient not in st.session_state.selected_nutrients:
+                    st.session_state.selected_nutrients.append(nutrient)
+            else:
+                if nutrient in st.session_state.selected_nutrients:
+                    st.session_state.selected_nutrients.remove(nutrient)
+    
+    # Use session state for selected nutrients
+    selected = st.session_state.selected_nutrients
+    
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Train button
