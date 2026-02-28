@@ -437,7 +437,7 @@ def render_navbar():
         'explore': 'active' if st.session_state.current_section == 'explore' else '',
         'analyze': 'active' if st.session_state.current_section == 'analyze' else '',
         'train': 'active' if st.session_state.current_section == 'train' else '',
-        'submit': 'active' if st.session_state.current_section == 'submit' else '',
+        'simple': 'active' if st.session_state.current_section == 'simple' else '',
         'settings': 'active' if st.session_state.current_section == 'settings' else ''
     }
     
@@ -449,7 +449,7 @@ def render_navbar():
             st.session_state.current_section = 'explore'
             st.rerun()
     with col2:
-        if st.button("🔍 Analyze", key="nav_analyze", use_container_width=True):
+        if st.button("Advanced Analysis", key="nav_analyze", use_container_width=True):
             st.session_state.current_section = 'analyze'
             st.rerun()
     with col3:
@@ -457,8 +457,8 @@ def render_navbar():
             st.session_state.current_section = 'train'
             st.rerun()
     with col4:
-        if st.button("📋 Batch Export", key="nav_submit", use_container_width=True):
-            st.session_state.current_section = 'submit'
+        if st.button("🌾 Analysis", key="nav_simple", use_container_width=True):
+            st.session_state.current_section = 'simple'
             st.rerun()
     with col5:
         if st.button("⚙️ Settings", key="nav_settings", use_container_width=True):
@@ -504,7 +504,7 @@ all_nutrients = ['Al', 'B', 'Ca', 'Cu', 'Fe', 'K', 'Mg', 'Mn', 'N', 'Na', 'P', '
 # ----- SECTION 2: ANALYZE NEW DATA -----
 if st.session_state.current_section == 'analyze':
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 🔍 Analyze New Data")
+    st.markdown("### Advanced Analysis")
     st.write("Debug: Analyze section is being rendered")
     
     # Input Method Selection - Clickable Card Buttons
@@ -1713,249 +1713,304 @@ elif st.session_state.current_section == 'train':
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ----- SECTION 3: BATCH EXPORT -----
+# ----- SECTION 3: SIMPLE ANALYSIS -----
+elif st.session_state.current_section == 'simple':
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("### 🌾 Location-Based Analysis")
+    st.markdown("<p style='color: #666;'>Get personalized crop recommendations for your farm location. Simple and easy to use!</p>", unsafe_allow_html=True)
+    
+    # Initialize simple analysis session state
+    if 'simple_analysis_results' not in st.session_state:
+        st.session_state.simple_analysis_results = None
+    if 'simple_location' not in st.session_state:
+        st.session_state.simple_location = {'lat': None, 'lon': None}
+    
+    # === LOCATION INFORMATION SECTION ===
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    st.markdown("#### 📍 Location Information")
+    st.markdown("<p style='color: #666; font-size: 0.9rem;'>Enter your farm's coordinates to get personalized recommendations.</p>", unsafe_allow_html=True)
+    
+    loc_col1, loc_col2 = st.columns(2)
+    
+    with loc_col1:
+        latitude = st.number_input(
+            "Latitude",
+            min_value=-90.0,
+            max_value=90.0,
+            value=st.session_state.simple_location['lat'] if st.session_state.simple_location['lat'] else 0.0,
+            format="%.6f",
+            help="Enter latitude (e.g., -1.2921 for Nairobi)"
+        )
+    
+    with loc_col2:
+        longitude = st.number_input(
+            "Longitude",
+            min_value=-180.0,
+            max_value=180.0,
+            value=st.session_state.simple_location['lon'] if st.session_state.simple_location['lon'] else 0.0,
+            format="%.6f",
+            help="Enter longitude (e.g., 36.8219 for Nairobi)"
+        )
+    
+    # === ANALYZE BUTTON ===
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    
+    analyze_col1, analyze_col2, analyze_col3 = st.columns([1, 2, 1])
+    
+    with analyze_col2:
+        analyze_clicked = st.button("🔍 Analyze Location", type="primary", use_container_width=True)
+    
+    if analyze_clicked:
+        with st.spinner("Checking location availability..."):
+            try:
+                # Store location in session state
+                st.session_state.simple_location = {'lat': latitude, 'lon': longitude}
+                
+                # Find nearest soil data from training set based on coordinates
+                if train is not None:
+                    # Calculate distances to all training points
+                    train['distance'] = np.sqrt(
+                        (train['Latitude'] - latitude) ** 2 + 
+                        (train['Longitude'] - longitude) ** 2
+                    )
+                    
+                    # Get the nearest sample and its distance
+                    nearest_idx = train['distance'].idxmin()
+                    nearest_distance_deg = train.loc[nearest_idx, 'distance']
+                    nearest_distance_km = nearest_distance_deg * 111  # Rough conversion to km
+                    
+                    # Define maximum acceptable distance (50 km)
+                    MAX_DISTANCE_KM = 50
+                    
+                    if nearest_distance_km > MAX_DISTANCE_KM:
+                        # Location is outside available data region
+                        st.session_state.simple_analysis_results = {
+                            'error': True,
+                            'message': f"📍 **Location Data Not Available**\n\nThe coordinates you entered ({latitude:.4f}°, {longitude:.4f}°) are outside our current data coverage area.\n\n**Nearest data point:** {nearest_distance_km:.1f} km away\n**Coverage radius:** {MAX_DISTANCE_KM} km\n\nPlease try a location closer to our monitored regions, or use the **Advanced Analysis** page to manually input soil data.",
+                            'nearest_distance_km': nearest_distance_km
+                        }
+                    else:
+                        # Location is within available region - proceed with analysis
+                        nearest_sample = train.loc[nearest_idx]
+                        
+                        # Build soil data dictionary for crop suitability
+                        soil_data = {
+                            'Latitude': latitude,
+                            'Longitude': longitude,
+                            'distance_km': nearest_distance_km
+                        }
+                        
+                        # Add predicted nutrients from nearest sample (target columns)
+                        target_cols = ['N', 'P', 'K', 'Ca', 'Mg', 'S', 'Fe', 'Mn', 'Zn', 'Cu', 'B', 'Al', 'Na']
+                        predicted_nutrients = {}
+                        for nutrient in target_cols:
+                            if nutrient in nearest_sample:
+                                predicted_nutrients[nutrient] = nearest_sample[nutrient]
+                                soil_data[nutrient] = nearest_sample[nutrient]
+                        
+                        # Calculate crop suitability
+                        crop_scores = calculate_crop_suitability(soil_data, predicted_nutrients)
+                        
+                        # Store results
+                        st.session_state.simple_analysis_results = {
+                            'soil_data': soil_data,
+                            'predicted_nutrients': predicted_nutrients,
+                            'crop_scores': crop_scores,
+                            'nearest_distance_km': nearest_distance_km,
+                            'error': False
+                        }
+                        
+                        st.success(f"✅ Analysis complete! Using soil data from {nearest_distance_km:.1f} km away.")
+                else:
+                    # No training data available
+                    st.session_state.simple_analysis_results = {
+                        'error': True,
+                        'message': "📍 **Location Data Not Available**\n\nOur soil database is currently unavailable. Please try again later, or use the **Advanced Analysis** page to manually input your soil data."
+                    }
+                    
+            except Exception as e:
+                st.error(f"❌ Error during analysis: {str(e)}")
+                st.session_state.simple_analysis_results = {'error': True, 'message': f"An error occurred: {str(e)}"}
+    
+    # === RECOMMENDATIONS SECTION ===
+    if st.session_state.simple_analysis_results is not None:
+        st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+        st.markdown("---")
+        
+        results = st.session_state.simple_analysis_results
+        
+        # Check if there's an error (location outside available region)
+        if results.get('error', False):
+            st.markdown("### ❌ Location Not Available")
+            st.markdown(f"""
+                <div style="padding: 2rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+                            border-radius: 12px; border-left: 4px solid #f59e0b; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
+                    <div style="color: #92400e; line-height: 1.6;">
+                        {results['message']}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+            
+            # Option to try again
+            if st.button("🔄 Try Different Location", use_container_width=True):
+                st.session_state.simple_analysis_results = None
+                st.rerun()
+        
+        else:
+            # Location is valid - show recommendations
+            st.markdown("### 📊 Recommendations")
+            
+            crop_scores = results['crop_scores']
+            soil_data = results['soil_data']
+            predicted_nutrients = results['predicted_nutrients']
+            
+            # Display location info
+            info_col1, info_col2 = st.columns(2)
+            with info_col1:
+                st.markdown(f"**📍 Coordinates:** {soil_data['Latitude']:.4f}°, {soil_data['Longitude']:.4f}°")
+            with info_col2:
+                if results.get('nearest_distance_km'):
+                    st.markdown(f"**📏 Data Source:** {results['nearest_distance_km']:.1f} km from your location")
+            
+            st.markdown("<div style='margin: 1rem 0;'></div>", unsafe_allow_html=True)
+            
+            # Create two columns for recommendations
+            rec_col1, rec_col2 = st.columns(2)
+            
+            with rec_col1:
+                st.markdown('<div style="padding: 1rem; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; border-left: 4px solid #16a34a;">', unsafe_allow_html=True)
+                st.markdown("<h5 style='color: #16a34a; margin-bottom: 1rem;'>✅ Top 5 Suitable Crops</h5>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>These crops are best suited for your soil conditions</p>", unsafe_allow_html=True)
+                
+                for i, (crop_name, score, factors) in enumerate(crop_scores[:5]):
+                    score_color = "#16a34a" if score >= 70 else "#ca8a04" if score >= 50 else "#dc2626"
+                    st.markdown(f"""
+                        <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: rgba(255,255,255,0.8); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; color: #1e293b;">{['🌽', '🌾', '🌱', '🫘', '🥬'][i]} {crop_name}</span>
+                                <span style="font-weight: 700; color: {score_color};">{score:.0f}%</span>
+                            </div>
+                            <div style="margin-top: 0.25rem; height: 4px; background: #e2e8f0; border-radius: 2px;">
+                                <div style="width: {score}%; height: 100%; background: {score_color}; border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with rec_col2:
+                st.markdown('<div style="padding: 1rem; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px; border-left: 4px solid #dc2626;">', unsafe_allow_html=True)
+                st.markdown("<h5 style='color: #dc2626; margin-bottom: 1rem;'>❌ Top 5 Unsuitable Crops</h5>", unsafe_allow_html=True)
+                st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>These crops may not thrive in your soil conditions</p>", unsafe_allow_html=True)
+                
+                for i, (crop_name, score, factors) in enumerate(crop_scores[-5:]):
+                    score_color = "#dc2626"
+                    st.markdown(f"""
+                        <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: rgba(255,255,255,0.8); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; color: #1e293b;">{['🍅', '🥔', '🧅', '🍵', '🌿'][i]} {crop_name}</span>
+                                <span style="font-weight: 700; color: {score_color};">{score:.0f}%</span>
+                            </div>
+                            <div style="margin-top: 0.25rem; height: 4px; background: #e2e8f0; border-radius: 2px;">
+                                <div style="width: {score}%; height: 100%; background: {score_color}; border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # === DOWNLOAD BUTTONS ===
+            st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+            st.markdown("---")
+            st.markdown("#### 💾 Download Results")
+            
+            dl_col1, dl_col2, dl_col3 = st.columns(3)
+            
+            with dl_col1:
+                # Generate PDF
+                try:
+                    pdf_bytes = generate_analysis_pdf(soil_data, predicted_nutrients, crop_scores, f"Location Analysis ({latitude:.4f}, {longitude:.4f})")
+                    st.download_button(
+                        label="📄 Download PDF Report",
+                        data=pdf_bytes,
+                        file_name=f"soil_analysis_{latitude:.4f}_{longitude:.4f}.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"PDF generation failed: {str(e)}")
+            
+            with dl_col2:
+                # Generate CSV
+                csv_results = {
+                    'Parameter': ['Latitude', 'Longitude'],
+                    'Value': [latitude, longitude]
+                }
+                
+                # Add nutrients
+                for nutrient, value in predicted_nutrients.items():
+                    csv_results['Parameter'].append(f'{nutrient} (Predicted)')
+                    csv_results['Value'].append(f'{value:.2f}')
+                
+                # Add top 5 suitable crops
+                csv_results['Parameter'].append('---')
+                csv_results['Value'].append('---')
+                csv_results['Parameter'].append('TOP 5 SUITABLE CROPS')
+                csv_results['Value'].append('')
+                
+                for i, (crop_name, score, _) in enumerate(crop_scores[:5], 1):
+                    csv_results['Parameter'].append(f"{i}. {crop_name}")
+                    csv_results['Value'].append(f"{score:.1f}%")
+                
+                # Add top 5 unsuitable crops
+                csv_results['Parameter'].append('---')
+                csv_results['Value'].append('---')
+                csv_results['Parameter'].append('TOP 5 UNSUITABLE CROPS')
+                csv_results['Value'].append('')
+                
+                for i, (crop_name, score, _) in enumerate(crop_scores[-5:], 1):
+                    csv_results['Parameter'].append(f"{i}. {crop_name}")
+                    csv_results['Value'].append(f"{score:.1f}%")
+                
+                results_df = pd.DataFrame(csv_results)
+                csv_data = results_df.to_csv(index=False)
+                
+                st.download_button(
+                    label="📊 Download CSV",
+                    data=csv_data,
+                    file_name=f"soil_analysis_{latitude:.4f}_{longitude:.4f}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+            
+            with dl_col3:
+                # New Analysis button
+                if st.button("🔄 New Analysis", use_container_width=True):
+                    st.session_state.simple_analysis_results = None
+                    st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ----- SECTION 4: BATCH EXPORT (DEPRECATED - MOVED TO ADVANCED ANALYSIS) -----
 elif st.session_state.current_section == 'submit':
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📋 Batch Export Predictions")
-    st.markdown("Export your soil nutrient predictions in multiple formats for further analysis or reporting.")
+    st.markdown("### 📋 Batch Export")
+    st.info("🔄 **Batch Export functionality has been integrated into the Advanced Analysis page.**")
+    st.markdown("""
+    <p style='color: #666;'>Please use the <strong>Advanced Analysis</strong> page to:</p>
+    <ul style='color: #666;'>
+        <li>Upload batch datasets for analysis</li>
+        <li>Export predictions in multiple formats (CSV, Excel, PDF)</li>
+        <li>Generate comprehensive reports</li>
+    </ul>
+    """, unsafe_allow_html=True)
     
-    # Initialize export session state
-    if 'export_data' not in st.session_state:
-        st.session_state.export_data = None
-    if 'export_format' not in st.session_state:
-        st.session_state.export_format = "CSV"
-    
-    # Export Options Section
-    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
-    st.markdown("#### 🎯 Export Options")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        export_format = st.selectbox(
-            "Select Format",
-            ["CSV", "Excel (.xlsx)", "JSON", "Parquet"],
-            index=0,
-            help="Choose the file format for your export"
-        )
-    
-    with col2:
-        include_metadata = st.checkbox("Include Metadata", value=True,
-            help="Add prediction timestamps and model information")
-    
-    with col3:
-        nutrient_filter = st.multiselect(
-            "Filter Nutrients",
-            all_nutrients,
-            default=all_nutrients,
-            help="Select specific nutrients to include in export"
-        )
-    
-    # Data Selection Section
-    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
-    st.markdown("#### 📊 Data Selection")
-    
-    data_source = st.radio(
-        "Choose Data Source",
-        ["Use Trained Models (Test Set)", "Upload Custom Dataset"],
-        horizontal=True
-    )
-    
-    if data_source == "Upload Custom Dataset":
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        uploaded_export_file = st.file_uploader(
-            "Upload soil data for prediction (CSV or JSON)",
-            type=['csv', 'json'],
-            key="export_upload"
-        )
-        
-        if uploaded_export_file is not None:
-            try:
-                if uploaded_export_file.name.endswith('.csv'):
-                    export_df = pd.read_csv(uploaded_export_file)
-                else:
-                    export_df = pd.read_json(uploaded_export_file)
-                
-                st.success(f"✅ Loaded {len(export_df):,} samples")
-                st.dataframe(export_df.head(3), use_container_width=True)
-                st.session_state.export_uploaded_data = export_df
-            except Exception as e:
-                st.error(f"❌ Error loading file: {str(e)}")
-                st.session_state.export_uploaded_data = None
-        else:
-            st.session_state.export_uploaded_data = None
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Generate Export Button
-    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    
-    with col2:
-        generate_clicked = st.button("🚀 Generate Export", type="primary", use_container_width=True)
-    
-    if generate_clicked:
-        with st.spinner("Processing predictions..."):
-            try:
-                # Determine data source
-                if data_source == "Use Trained Models (Test Set)":
-                    if not st.session_state.get('trained', False):
-                        st.warning("⚠️ Please train models first in the '🔬 Train' section, or upload a custom dataset.")
-                        st.stop()
-                    
-                    # Use existing predictor on test set
-                    if 'predictor' in st.session_state:
-                        predictions = st.session_state.predictor.predict()
-                        source_info = "Test Set Predictions"
-                    else:
-                        st.error("❌ Predictor not found. Please train models first.")
-                        st.stop()
-                else:
-                    # Use uploaded data
-                    if 'export_uploaded_data' not in st.session_state or st.session_state.export_uploaded_data is None:
-                        st.warning("⚠️ Please upload a dataset first.")
-                        st.stop()
-                    
-                    if not st.session_state.get('trained', False):
-                        st.warning("⚠️ Please train models first in the '🔬 Train' section.")
-                        st.stop()
-                    
-                    # Predict on uploaded data
-                    input_df = st.session_state.export_uploaded_data
-                    predictor = st.session_state.predictor
-                    predictions = predictor.predict_on_data(input_df)
-                    source_info = f"Custom Dataset ({len(input_df):,} samples)"
-                
-                # Filter nutrients if needed
-                if len(nutrient_filter) < len(all_nutrients):
-                    nutrient_cols = [f"Target_{n}" for n in nutrient_filter]
-                    if 'ID' in predictions.columns:
-                        predictions = predictions[['ID'] + nutrient_cols]
-                    else:
-                        predictions = predictions[nutrient_cols]
-                
-                # Add metadata if requested
-                if include_metadata:
-                    from datetime import datetime
-                    predictions['_export_timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    predictions['_source'] = source_info
-                    predictions['_model_version'] = st.session_state.get('model_version', 'v1.0')
-                
-                st.session_state.export_data = predictions
-                st.session_state.export_format = export_format
-                
-                st.success(f"✅ Export generated successfully! {len(predictions):,} rows × {len(predictions.columns)} columns")
-                
-            except Exception as e:
-                st.error(f"❌ Error generating export: {str(e)}")
-                st.info("💡 Make sure models are trained and data is properly formatted.")
-    
-    # Preview and Download Section
-    if st.session_state.export_data is not None:
-        st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
-        st.markdown("#### 👁️ Preview & Download")
-        
-        export_data = st.session_state.export_data
-        export_format = st.session_state.export_format
-        
-        # Show preview
-        with st.expander("📋 Preview Data (First 10 rows)", expanded=True):
-            st.dataframe(export_data.head(10), use_container_width=True)
-        
-        # Export statistics
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total Rows", f"{len(export_data):,}")
-        with col2:
-            st.metric("Total Columns", len(export_data.columns))
-        with col3:
-            nutrient_cols = [c for c in export_data.columns if c.startswith('Target_')]
-            st.metric("Nutrients", len(nutrient_cols))
-        with col4:
-            file_size_estimate = export_data.memory_usage(deep=True).sum() / 1024
-            st.metric("Est. Size", f"{file_size_estimate:.1f} KB")
-        
-        # Download buttons based on format
-        st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
-        st.markdown("#### ⬇️ Download Files")
-        
-        dl_col1, dl_col2, dl_col3 = st.columns(3)
-        
-        with dl_col1:
-            # CSV Export
-            csv_data = export_data.to_csv(index=False)
-            st.download_button(
-                label="📄 Download CSV",
-                data=csv_data,
-                file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        
-        with dl_col2:
-            # Excel Export
-            try:
-                import io
-                excel_buffer = io.BytesIO()
-                export_data.to_excel(excel_buffer, index=False, engine='openpyxl')
-                excel_buffer.seek(0)
-                st.download_button(
-                    label="📊 Download Excel",
-                    data=excel_buffer,
-                    file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
-            except ImportError:
-                st.info("📊 Excel export requires openpyxl: `pip install openpyxl`")
-        
-        with dl_col3:
-            # JSON Export
-            json_data = export_data.to_json(orient='records', indent=2)
-            st.download_button(
-                label="📋 Download JSON",
-                data=json_data,
-                file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json",
-                use_container_width=True
-            )
-        
-        # Additional formats row
-        dl_col4, dl_col5, dl_col6 = st.columns(3)
-        
-        with dl_col4:
-            # Parquet Export
-            try:
-                import io
-                parquet_buffer = io.BytesIO()
-                export_data.to_parquet(parquet_buffer, index=False)
-                parquet_buffer.seek(0)
-                st.download_button(
-                    label="🔷 Download Parquet",
-                    data=parquet_buffer,
-                    file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.parquet",
-                    mime="application/octet-stream",
-                    use_container_width=True
-                )
-            except ImportError:
-                st.info("🔷 Parquet requires pyarrow: `pip install pyarrow`")
-        
-        with dl_col5:
-            # Summary Report
-            summary_data = export_data.describe().to_csv()
-            st.download_button(
-                label="📈 Summary Stats",
-                data=summary_data,
-                file_name=f"summary_stats_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-        
-        with dl_col6:
-            # Reset export
-            if st.button("🔄 New Export", use_container_width=True):
-                st.session_state.export_data = None
-                st.rerun()
+    if st.button("Go to Advanced Analysis →", type="primary"):
+        st.session_state.current_section = 'analyze'
+        st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
 
