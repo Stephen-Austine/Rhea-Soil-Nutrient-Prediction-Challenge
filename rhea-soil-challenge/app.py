@@ -13,6 +13,194 @@ import joblib
 import warnings
 warnings.filterwarnings('ignore')
 
+# Import for PDF generation
+try:
+    from fpdf import FPDF
+    FPDF_AVAILABLE = True
+except ImportError:
+    FPDF_AVAILABLE = False
+
+# ============= CROP DATABASE =============
+# Comprehensive database of crops with their optimal nutrient requirements
+# Format: {crop_name: {nutrient: (min_optimal, max_optimal, weight), ...}}
+CROP_DATABASE = {
+    # Cereals
+    "Maize": {"N": (15, 25, 1.0), "P": (10, 20, 0.9), "K": (15, 25, 0.9), "pH": (5.8, 7.0, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Wheat": {"N": (20, 30, 1.0), "P": (12, 25, 0.9), "K": (15, 30, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (2.5, 5.0, 0.7)},
+    "Rice": {"N": (15, 30, 1.0), "P": (8, 18, 0.9), "K": (12, 25, 0.9), "pH": (5.5, 6.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Sorghum": {"N": (10, 20, 1.0), "P": (8, 15, 0.9), "K": (12, 20, 0.9), "pH": (5.5, 7.5, 0.8), "OrganicMatter": (1.5, 3.5, 0.7)},
+    "Barley": {"N": (18, 28, 1.0), "P": (10, 20, 0.9), "K": (15, 25, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Millet": {"N": (8, 15, 1.0), "P": (6, 12, 0.9), "K": (10, 18, 0.9), "pH": (5.5, 7.0, 0.8), "OrganicMatter": (1.0, 2.5, 0.7)},
+    
+    # Legumes
+    "Beans": {"N": (10, 20, 0.8), "P": (15, 25, 1.0), "K": (15, 25, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Peas": {"N": (12, 22, 0.8), "P": (12, 22, 1.0), "K": (12, 22, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (2.5, 4.5, 0.7)},
+    "Lentils": {"N": (8, 18, 0.8), "P": (10, 20, 1.0), "K": (12, 20, 0.9), "pH": (6.0, 7.0, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Chickpeas": {"N": (10, 20, 0.8), "P": (12, 22, 1.0), "K": (15, 25, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Soybeans": {"N": (15, 30, 0.8), "P": (15, 30, 1.0), "K": (20, 35, 0.9), "pH": (6.0, 7.0, 0.8), "OrganicMatter": (2.5, 4.5, 0.7)},
+    "Groundnuts": {"N": (10, 20, 0.8), "P": (15, 30, 1.0), "K": (20, 35, 0.9), "pH": (5.5, 7.0, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    
+    # Root Crops
+    "Potatoes": {"N": (20, 35, 1.0), "P": (15, 30, 0.9), "K": (25, 40, 1.0), "pH": (5.0, 6.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Cassava": {"N": (10, 20, 0.9), "P": (8, 15, 0.8), "K": (15, 25, 0.9), "pH": (5.5, 7.0, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Sweet Potatoes": {"N": (8, 18, 0.9), "P": (12, 22, 0.8), "K": (20, 35, 0.9), "pH": (5.5, 6.5, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Carrots": {"N": (10, 20, 0.9), "P": (15, 30, 0.9), "K": (20, 35, 0.9), "pH": (6.0, 7.0, 0.8), "OrganicMatter": (2.5, 4.5, 0.7)},
+    
+    # Vegetables
+    "Tomatoes": {"N": (20, 40, 1.0), "P": (20, 35, 0.9), "K": (25, 45, 1.0), "pH": (6.0, 6.8, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Cabbage": {"N": (25, 45, 1.0), "P": (18, 30, 0.9), "K": (20, 35, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Onions": {"N": (15, 30, 0.9), "P": (15, 25, 0.9), "K": (20, 35, 0.9), "pH": (6.0, 7.0, 0.8), "OrganicMatter": (2.5, 4.5, 0.7)},
+    "Spinach": {"N": (20, 40, 1.0), "P": (15, 25, 0.9), "K": (20, 35, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Kale": {"N": (25, 45, 1.0), "P": (15, 30, 0.9), "K": (20, 35, 0.9), "pH": (6.0, 7.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    
+    # Cash Crops
+    "Coffee": {"N": (15, 25, 0.9), "P": (10, 20, 0.9), "K": (20, 35, 1.0), "pH": (5.5, 6.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Tea": {"N": (20, 35, 1.0), "P": (12, 22, 0.9), "K": (15, 25, 0.9), "pH": (4.5, 5.5, 0.8), "OrganicMatter": (3.0, 5.0, 0.7)},
+    "Cotton": {"N": (20, 35, 1.0), "P": (15, 25, 0.9), "K": (20, 35, 0.9), "pH": (5.5, 7.5, 0.8), "OrganicMatter": (2.0, 4.0, 0.7)},
+    "Tobacco": {"N": (25, 45, 1.0), "P": (20, 35, 0.9), "K": (25, 40, 0.9), "pH": (5.5, 6.5, 0.8), "OrganicMatter": (2.5, 4.5, 0.7)},
+}
+
+def calculate_crop_suitability(soil_data, predicted_nutrients=None):
+    """
+    Calculate suitability scores for all crops based on soil conditions.
+    
+    Args:
+        soil_data: Dictionary with soil parameters (pH, OrganicMatter, etc.)
+        predicted_nutrients: Dictionary with predicted N, P, K values (optional)
+    
+    Returns:
+        List of tuples (crop_name, suitability_score, matching_nutrients)
+    """
+    scores = []
+    
+    for crop_name, requirements in CROP_DATABASE.items():
+        total_score = 0
+        total_weight = 0
+        matching_factors = []
+        
+        for nutrient, (min_val, max_val, weight) in requirements.items():
+            # Get actual value from soil data or predicted nutrients
+            if nutrient in soil_data:
+                actual_value = soil_data[nutrient]
+            elif predicted_nutrients and nutrient in predicted_nutrients:
+                actual_value = predicted_nutrients[nutrient]
+            else:
+                continue
+            
+            # Calculate suitability score for this nutrient
+            if min_val <= actual_value <= max_val:
+                # Within optimal range - full score
+                nutrient_score = 1.0
+                matching_factors.append(f"{nutrient}: Optimal")
+            elif actual_value < min_val:
+                # Below minimum - partial score based on proximity
+                ratio = actual_value / min_val if min_val > 0 else 0
+                nutrient_score = max(0, ratio)
+                matching_factors.append(f"{nutrient}: Low ({ratio*100:.0f}%)")
+            else:
+                # Above maximum - partial score based on excess
+                ratio = max_val / actual_value if actual_value > 0 else 0
+                nutrient_score = max(0, ratio)
+                matching_factors.append(f"{nutrient}: High ({ratio*100:.0f}%)")
+            
+            total_score += nutrient_score * weight
+            total_weight += weight
+        
+        # Calculate final percentage score
+        if total_weight > 0:
+            final_score = (total_score / total_weight) * 100
+        else:
+            final_score = 0
+        
+        scores.append((crop_name, final_score, matching_factors))
+    
+    # Sort by score descending
+    scores.sort(key=lambda x: x[1], reverse=True)
+    return scores
+
+
+def generate_analysis_pdf(soil_data, predictions, crop_scores, input_type="Manual Entry"):
+    """
+    Generate a PDF report of the soil analysis results.
+    
+    Args:
+        soil_data: Dictionary with soil parameters
+        predictions: Dictionary with predicted nutrient levels
+        crop_scores: List of crop suitability scores
+        input_type: String indicating input method
+    
+    Returns:
+        BytesIO object containing the PDF
+    """
+    from io import BytesIO
+    
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Title
+    pdf.set_font('Arial', 'B', 20)
+    pdf.cell(0, 15, 'Soil Nutrient Analysis Report', 0, 1, 'C')
+    pdf.ln(5)
+    
+    # Date and Input Type
+    pdf.set_font('Arial', '', 12)
+    from datetime import datetime
+    pdf.cell(0, 10, f'Report Date: {datetime.now().strftime("%Y-%m-%d %H:%M")}', 0, 1, 'L')
+    pdf.cell(0, 10, f'Analysis Type: {input_type}', 0, 1, 'L')
+    pdf.ln(5)
+    
+    # Soil Input Data Section
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Soil Input Parameters', 0, 1, 'L')
+    pdf.set_font('Arial', '', 11)
+    
+    for key, value in soil_data.items():
+        if isinstance(value, (int, float)):
+            pdf.cell(0, 8, f'{key}: {value:.2f}', 0, 1, 'L')
+        else:
+            pdf.cell(0, 8, f'{key}: {value}', 0, 1, 'L')
+    pdf.ln(5)
+    
+    # Predicted Nutrients Section
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Predicted Nutrient Levels', 0, 1, 'L')
+    pdf.set_font('Arial', '', 11)
+    
+    if predictions:
+        for nutrient, value in predictions.items():
+            pdf.cell(0, 8, f'{nutrient}: {value:.2f} mg/kg', 0, 1, 'L')
+    pdf.ln(5)
+    
+    # Recommended Crops Section
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Recommended Crops (Top 5)', 0, 1, 'L')
+    pdf.set_font('Arial', '', 11)
+    
+    for i, (crop_name, score, _) in enumerate(crop_scores[:5], 1):
+        pdf.cell(0, 8, f'{i}. {crop_name}: {score:.1f}% suitability', 0, 1, 'L')
+    pdf.ln(5)
+    
+    # Not Recommended Crops Section
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Not Recommended Crops (Bottom 5)', 0, 1, 'L')
+    pdf.set_font('Arial', '', 11)
+    
+    for i, (crop_name, score, _) in enumerate(crop_scores[-5:], 1):
+        pdf.cell(0, 8, f'{i}. {crop_name}: {score:.1f}% suitability', 0, 1, 'L')
+    pdf.ln(10)
+    
+    # Footer
+    pdf.set_font('Arial', 'I', 10)
+    pdf.set_text_color(128, 128, 128)
+    pdf.cell(0, 10, 'Generated by Rhea Soil Nutrient Predictor', 0, 1, 'C')
+    
+    # Output to BytesIO
+    pdf_output = BytesIO()
+    pdf.output(pdf_output)
+    pdf_output.seek(0)
+    return pdf_output
+
+
 # ============= PAGE CONFIG - MUST BE FIRST =============
 st.set_page_config(
     page_title="Rhea Soil Nutrient Predictor",
@@ -20,6 +208,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# ============= INITIALIZE SESSION STATE =============
+if 'analyses_count' not in st.session_state:
+    st.session_state.analyses_count = 0
 
 # ============= CUSTOM CSS WITH NAVBAR =============
 CUSTOM_CSS = """
@@ -265,7 +457,7 @@ def render_navbar():
             st.session_state.current_section = 'train'
             st.rerun()
     with col4:
-        if st.button("📤 Submit", key="nav_submit", use_container_width=True):
+        if st.button("📋 Batch Export", key="nav_submit", use_container_width=True):
             st.session_state.current_section = 'submit'
             st.rerun()
     with col5:
@@ -515,8 +707,8 @@ if st.session_state.current_section == 'analyze':
                 try:
                     from main import SoilNutrientPredictor
                     
-                    # Increment files analyzed counter
-                    st.session_state.files_analyzed += 1
+                    # Increment analyses counter
+                    st.session_state.analyses_count += 1
                     
                     predictor = SoilNutrientPredictor()
                     predictor.load('models/')
@@ -600,6 +792,131 @@ if st.session_state.current_section == 'analyze':
                     
                     st.markdown('</div>', unsafe_allow_html=True)
                     
+                    # ============= CROP RECOMMENDATIONS FOR BATCH =============
+                    st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("#### 🌾 Crop Recommendations (Batch Average)")
+                    st.markdown("<p style='color: #666; margin-bottom: 1.5rem;'>Based on average soil conditions across all uploaded samples.</p>", unsafe_allow_html=True)
+                    
+                    # Calculate average nutrient values from predictions for crop recommendations
+                    avg_soil_data = {
+                        'pH': uploaded_df['pH'].mean() if 'pH' in uploaded_df.columns else 6.5,
+                        'OrganicMatter': uploaded_df['OrganicMatter'].mean() if 'OrganicMatter' in uploaded_df.columns else 3.0,
+                    }
+                    
+                    # Add predicted nutrient averages
+                    nutrient_cols = ['N', 'P', 'K']
+                    for col in nutrient_cols:
+                        if col in predictions.columns:
+                            avg_soil_data[col] = predictions[col].mean()
+                        elif col in uploaded_df.columns:
+                            avg_soil_data[col] = uploaded_df[col].mean()
+                        else:
+                            avg_soil_data[col] = 15.0  # Default value
+                    
+                    # Calculate crop suitability
+                    batch_crop_scores = calculate_crop_suitability(avg_soil_data)
+                    
+                    # Create two columns
+                    col_rec, col_not_rec = st.columns(2, gap="large")
+                    
+                    with col_rec:
+                        st.markdown("<div style='background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #16a34a;'>", unsafe_allow_html=True)
+                        st.markdown("<h5 style='color: #16a34a; margin-bottom: 1rem;'>✅ Recommended Crops</h5>", unsafe_allow_html=True)
+                        st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>Top 5 crops best suited for average soil conditions</p>", unsafe_allow_html=True)
+                        
+                        for i, (crop_name, score, factors) in enumerate(batch_crop_scores[:5]):
+                            score_color = "#16a34a" if score >= 70 else "#ca8a04" if score >= 50 else "#dc2626"
+                            score_bg = "#f0fdf4" if score >= 70 else "#fefce8" if score >= 50 else "#fef2f2"
+                            
+                            st.markdown(f"""
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin: 0.5rem 0; background: {score_bg}; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="font-size: 1.25rem;">{['🌽', '🌾', '🌱', '🫘', '🥬'][i]}</span>
+                                    <span style="font-weight: 600; color: #1e293b;">{crop_name}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: {score_color};">{score:.0f}%</div>
+                                    <div style="font-size: 0.7rem; color: #666;">Suitability</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+                                <div style="width: {score}%; height: 100%; background: linear-gradient(90deg, {score_color} 0%, {score_color}80 100%); border-radius: 2px;"></div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    with col_not_rec:
+                        st.markdown("<div style='background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #dc2626;'>", unsafe_allow_html=True)
+                        st.markdown("<h5 style='color: #dc2626; margin-bottom: 1rem;'>❌ Not Recommended</h5>", unsafe_allow_html=True)
+                        st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>Crops that may struggle in current soil conditions</p>", unsafe_allow_html=True)
+                        
+                        for i, (crop_name, score, factors) in enumerate(batch_crop_scores[-5:]):
+                            score_color = "#16a34a" if score >= 70 else "#ca8a04" if score >= 50 else "#dc2626"
+                            score_bg = "#fef2f2" if score < 40 else "#fefce8" if score < 60 else "#f0fdf4"
+                            
+                            st.markdown(f"""
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin: 0.5rem 0; background: {score_bg}; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="font-size: 1.25rem;">{['🍅', '🥔', '🧅', '🍵', '🌿'][i]}</span>
+                                    <span style="font-weight: 600; color: #1e293b;">{crop_name}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: {score_color};">{score:.0f}%</div>
+                                    <div style="font-size: 0.7rem; color: #666;">Suitability</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+                                <div style="width: {score}%; height: 100%; background: linear-gradient(90deg, {score_color} 0%, {score_color}80 100%); border-radius: 2px;"></div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # ============= DOWNLOAD BATCH ANALYSIS RESULTS =============
+                    st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
+                    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+                    st.markdown("#### 💾 Download Batch Analysis Results")
+                    st.markdown(f"<p style='color: #666; margin-bottom: 1.5rem;'>Export results for {len(df_with_preds)} analyzed samples.</p>", unsafe_allow_html=True)
+                    
+                    col_csv, col_pdf = st.columns(2, gap="large")
+                    
+                    with col_csv:
+                        # CSV download for full batch results
+                        csv_batch = df_with_preds.to_csv(index=False)
+                        
+                        st.download_button(
+                            label="📄 Download Full Results (CSV)",
+                            data=csv_batch,
+                            file_name=f"batch_analysis_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
+                            mime="text/csv",
+                            use_container_width=True,
+                            key="download_csv_batch"
+                        )
+                        st.markdown("<p style='font-size: 0.8rem; color: #666; text-align: center;'>Complete dataset with all predictions</p>", unsafe_allow_html=True)
+                    
+                    with col_pdf:
+                        if FPDF_AVAILABLE:
+                            # Generate PDF for batch summary
+                            pdf_bytes = generate_analysis_pdf(avg_soil_data, avg_soil_data, batch_crop_scores, f"Batch Upload ({len(df_with_preds)} samples)")
+                            
+                            st.download_button(
+                                label="📑 Download Summary Report (PDF)",
+                                data=pdf_bytes,
+                                file_name=f"batch_summary_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.pdf",
+                                mime="application/pdf",
+                                use_container_width=True,
+                                key="download_pdf_batch"
+                            )
+                            st.markdown("<p style='font-size: 0.8rem; color: #666; text-align: center;'>Summary report with averages</p>", unsafe_allow_html=True)
+                        else:
+                            st.info("📦 Install fpdf2 to enable PDF downloads")
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    
                 except Exception as e:
                     st.error(f"❌ Error loading models or making predictions: {str(e)}")
                     st.info("Please ensure you have trained the models first in the 'Train' section or check that the models directory exists.")
@@ -637,6 +954,9 @@ if st.session_state.current_section == 'analyze':
                 
                 # Predict nutrient levels
                 predicted_nutrients = predictor.predict_single(soil_data)
+                
+                # Increment analyses counter
+                st.session_state.analyses_count += 1
                 
                 # Results Display
                 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -764,6 +1084,171 @@ if st.session_state.current_section == 'analyze':
             """, unsafe_allow_html=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ============= CROP RECOMMENDATIONS =============
+        st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 🌾 Crop Recommendations")
+        st.markdown("<p style='color: #666; margin-bottom: 1.5rem;'>Based on your soil analysis, here are the most suitable and unsuitable crops for your farm.</p>", unsafe_allow_html=True)
+        
+        # Calculate crop suitability scores
+        crop_scores = calculate_crop_suitability(soil_data, predicted_nutrients)
+        
+        # Create two columns for recommended and not recommended
+        col_rec, col_not_rec = st.columns(2, gap="large")
+        
+        with col_rec:
+            st.markdown("<div style='background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #16a34a;'>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color: #16a34a; margin-bottom: 1rem;'>✅ Recommended Crops</h5>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>Top 5 crops best suited for your soil conditions</p>", unsafe_allow_html=True)
+            
+            # Top 5 recommended crops
+            for i, (crop_name, score, factors) in enumerate(crop_scores[:5]):
+                score_color = "#16a34a" if score >= 70 else "#ca8a04" if score >= 50 else "#dc2626"
+                score_bg = "#f0fdf4" if score >= 70 else "#fefce8" if score >= 50 else "#fef2f2"
+                
+                st.markdown(f"""
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin: 0.5rem 0; background: {score_bg}; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.25rem;">{['🌽', '🌾', '🌱', '🫘', '🥬'][i]}</span>
+                        <span style="font-weight: 600; color: #1e293b;">{crop_name}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: {score_color};">{score:.0f}%</div>
+                        <div style="font-size: 0.7rem; color: #666;">Suitability</div>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+                    <div style="width: {score}%; height: 100%; background: linear-gradient(90deg, {score_color} 0%, {score_color}80 100%); border-radius: 2px; transition: width 0.5s ease;"></div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col_not_rec:
+            st.markdown("<div style='background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 1.5rem; border-radius: 12px; border-left: 4px solid #dc2626;'>", unsafe_allow_html=True)
+            st.markdown("<h5 style='color: #dc2626; margin-bottom: 1rem;'>❌ Not Recommended</h5>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 0.85rem; color: #666; margin-bottom: 1rem;'>Crops that may struggle in your current soil conditions</p>", unsafe_allow_html=True)
+            
+            # Bottom 5 not recommended crops
+            for i, (crop_name, score, factors) in enumerate(crop_scores[-5:]):
+                score_color = "#16a34a" if score >= 70 else "#ca8a04" if score >= 50 else "#dc2626"
+                score_bg = "#fef2f2" if score < 40 else "#fefce8" if score < 60 else "#f0fdf4"
+                
+                st.markdown(f"""
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; margin: 0.5rem 0; background: {score_bg}; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.25rem;">{['🍅', '🥔', '🧅', '🍵', '🌿'][i]}</span>
+                        <span style="font-weight: 600; color: #1e293b;">{crop_name}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: {score_color};">{score:.0f}%</div>
+                        <div style="font-size: 0.7rem; color: #666;">Suitability</div>
+                    </div>
+                </div>
+                <div style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px; margin-top: -0.25rem; margin-bottom: 0.5rem;">
+                    <div style="width: {score}%; height: 100%; background: linear-gradient(90deg, {score_color} 0%, {score_color}80 100%); border-radius: 2px; transition: width 0.5s ease;"></div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Add legend/explanation
+        st.markdown("<div style='margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px;'>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 0.85rem; color: #666; margin: 0;'><strong>📊 How to read:</strong> Suitability scores are calculated based on optimal nutrient requirements for each crop. Scores above 70% indicate excellent conditions, 50-70% are acceptable, and below 50% suggest the crop may require soil amendments.</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ============= DOWNLOAD ANALYSIS RESULTS =============
+        st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("#### 💾 Download Analysis Results")
+        st.markdown("<p style='color: #666; margin-bottom: 1.5rem;'>Export your soil analysis results for record keeping or sharing.</p>", unsafe_allow_html=True)
+        
+        col_csv, col_pdf = st.columns(2, gap="large")
+        
+        with col_csv:
+            # Prepare CSV data
+            csv_results = {
+                'Parameter': [],
+                'Value': [],
+                'Unit': []
+            }
+            
+            # Add soil input data
+            for key, value in soil_data.items():
+                csv_results['Parameter'].append(key)
+                csv_results['Parameter'].append(value if isinstance(value, str) else f"{value:.2f}")
+                csv_results['Unit'].append('')
+            
+            # Add predictions
+            if predicted_nutrients:
+                for nutrient, value in predicted_nutrients.items():
+                    csv_results['Parameter'].append(f"Predicted {nutrient}")
+                    csv_results['Value'].append(f"{value:.2f}")
+                    csv_results['Unit'].append('mg/kg')
+            
+            # Add crop recommendations
+            csv_results['Parameter'].append('---')
+            csv_results['Value'].append('---')
+            csv_results['Unit'].append('---')
+            
+            csv_results['Parameter'].append('RECOMMENDED CROPS')
+            csv_results['Value'].append('')
+            csv_results['Unit'].append('')
+            
+            for i, (crop_name, score, _) in enumerate(crop_scores[:5], 1):
+                csv_results['Parameter'].append(f"{i}. {crop_name}")
+                csv_results['Value'].append(f"{score:.1f}")
+                csv_results['Unit'].append('%')
+            
+            csv_results['Parameter'].append('NOT RECOMMENDED CROPS')
+            csv_results['Value'].append('')
+            csv_results['Unit'].append('')
+            
+            for i, (crop_name, score, _) in enumerate(crop_scores[-5:], 1):
+                csv_results['Parameter'].append(f"{i}. {crop_name}")
+                csv_results['Value'].append(f"{score:.1f}")
+                csv_results['Unit'].append('%')
+            
+            # Ensure all lists have the same length
+            max_len = max(len(csv_results['Parameter']), len(csv_results['Value']), len(csv_results['Unit']))
+            for key in csv_results:
+                while len(csv_results[key]) < max_len:
+                    csv_results[key].append('')
+            
+            df_results = pd.DataFrame(csv_results)
+            csv_data = df_results.to_csv(index=False)
+            
+            st.download_button(
+                label="📄 Download CSV Report",
+                data=csv_data,
+                file_name=f"soil_analysis_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="download_csv_manual"
+            )
+            st.markdown("<p style='font-size: 0.8rem; color: #666; text-align: center;'>Spreadsheet format compatible with Excel</p>", unsafe_allow_html=True)
+        
+        with col_pdf:
+            if FPDF_AVAILABLE:
+                # Generate PDF
+                pdf_bytes = generate_analysis_pdf(soil_data, predicted_nutrients, crop_scores, "Manual Entry")
+                
+                st.download_button(
+                    label="📑 Download PDF Report",
+                    data=pdf_bytes,
+                    file_name=f"soil_analysis_{pd.Timestamp.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="download_pdf_manual"
+                )
+                st.markdown("<p style='font-size: 0.8rem; color: #666; text-align: center;'>Formatted PDF report for sharing</p>", unsafe_allow_html=True)
+            else:
+                st.info("📦 Install fpdf2 to enable PDF downloads: `pip install fpdf2`")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     else:
         st.markdown('</div>', unsafe_allow_html=True)
@@ -804,15 +1289,12 @@ if st.session_state.current_section == 'explore':
         """, unsafe_allow_html=True)
 
     with col4:
-        # Track number of files analyzed
-        if 'files_analyzed' not in st.session_state:
-            st.session_state.files_analyzed = 0
-        
+        # Display analyses counter
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-label">📊 Files Analyzed</div>
-            <div class="metric-value">{st.session_state.files_analyzed}</div>
-            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">New data files processed</div>
+            <div class="metric-label">📊 Analyses Done</div>
+            <div class="metric-value">{st.session_state.analyses_count}</div>
+            <div style="font-size: 0.85rem; color: #666; margin-top: 0.5rem">Total analyses performed</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1231,109 +1713,469 @@ elif st.session_state.current_section == 'train':
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ----- SECTION 3: GENERATE SUBMISSION -----
+# ----- SECTION 3: BATCH EXPORT -----
 elif st.session_state.current_section == 'submit':
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 📤 Generate Competition Submission")
+    st.markdown("### 📋 Batch Export Predictions")
+    st.markdown("Export your soil nutrient predictions in multiple formats for further analysis or reporting.")
     
-    st.info("⚠️ **Important**: Predictions for entries marked 0 in TargetPred_To_Keep.csv will be automatically set to 0", icon="⚠️")
+    # Initialize export session state
+    if 'export_data' not in st.session_state:
+        st.session_state.export_data = None
+    if 'export_format' not in st.session_state:
+        st.session_state.export_format = "CSV"
     
-    if st.session_state.get('trained', False):
-        col1, col2 = st.columns([2, 1])
+    # Export Options Section
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    st.markdown("#### 🎯 Export Options")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        export_format = st.selectbox(
+            "Select Format",
+            ["CSV", "Excel (.xlsx)", "JSON", "Parquet"],
+            index=0,
+            help="Choose the file format for your export"
+        )
+    
+    with col2:
+        include_metadata = st.checkbox("Include Metadata", value=True,
+            help="Add prediction timestamps and model information")
+    
+    with col3:
+        nutrient_filter = st.multiselect(
+            "Filter Nutrients",
+            all_nutrients,
+            default=all_nutrients,
+            help="Select specific nutrients to include in export"
+        )
+    
+    # Data Selection Section
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    st.markdown("#### 📊 Data Selection")
+    
+    data_source = st.radio(
+        "Choose Data Source",
+        ["Use Trained Models (Test Set)", "Upload Custom Dataset"],
+        horizontal=True
+    )
+    
+    if data_source == "Upload Custom Dataset":
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        uploaded_export_file = st.file_uploader(
+            "Upload soil data for prediction (CSV or JSON)",
+            type=['csv', 'json'],
+            key="export_upload"
+        )
         
-        with col1:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown("#### Submission Preview")
-            
-            if st.button("🔮 Generate Predictions", type="primary", use_container_width=True):
-                with st.spinner("Generating predictions..."):
-                    submission = st.session_state.predictor.predict()
-                    st.session_state.submission = submission
+        if uploaded_export_file is not None:
+            try:
+                if uploaded_export_file.name.endswith('.csv'):
+                    export_df = pd.read_csv(uploaded_export_file)
+                else:
+                    export_df = pd.read_json(uploaded_export_file)
+                
+                st.success(f"✅ Loaded {len(export_df):,} samples")
+                st.dataframe(export_df.head(3), use_container_width=True)
+                st.session_state.export_uploaded_data = export_df
+            except Exception as e:
+                st.error(f"❌ Error loading file: {str(e)}")
+                st.session_state.export_uploaded_data = None
+        else:
+            st.session_state.export_uploaded_data = None
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Generate Export Button
+    st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        generate_clicked = st.button("🚀 Generate Export", type="primary", use_container_width=True)
+    
+    if generate_clicked:
+        with st.spinner("Processing predictions..."):
+            try:
+                # Determine data source
+                if data_source == "Use Trained Models (Test Set)":
+                    if not st.session_state.get('trained', False):
+                        st.warning("⚠️ Please train models first in the '🔬 Train' section, or upload a custom dataset.")
+                        st.stop()
                     
-                    st.success("✅ Predictions generated successfully!")
-                    st.dataframe(submission.head(10), use_container_width=True)
-                    
-                    from utils import validate_submission
-                    valid, errors = validate_submission(submission, all_nutrients)
-                    
-                    if valid:
-                        st.success("✅ Submission format is valid and ready for download!", icon="✅")
+                    # Use existing predictor on test set
+                    if 'predictor' in st.session_state:
+                        predictions = st.session_state.predictor.predict()
+                        source_info = "Test Set Predictions"
                     else:
-                        st.error(f"❌ Validation issues: {', '.join(errors)}")
+                        st.error("❌ Predictor not found. Please train models first.")
+                        st.stop()
+                else:
+                    # Use uploaded data
+                    if 'export_uploaded_data' not in st.session_state or st.session_state.export_uploaded_data is None:
+                        st.warning("⚠️ Please upload a dataset first.")
+                        st.stop()
                     
-                    csv = submission.to_csv(index=False)
-                    st.download_button(
-                        label="⬇️ Download submission.csv",
-                        data=csv,
-                        file_name="submission.csv",
-                        mime="text/csv",
-                        use_container_width=True
-                    )
-            st.markdown('</div>', unsafe_allow_html=True)
+                    if not st.session_state.get('trained', False):
+                        st.warning("⚠️ Please train models first in the '🔬 Train' section.")
+                        st.stop()
+                    
+                    # Predict on uploaded data
+                    input_df = st.session_state.export_uploaded_data
+                    predictor = st.session_state.predictor
+                    predictions = predictor.predict_on_data(input_df)
+                    source_info = f"Custom Dataset ({len(input_df):,} samples)"
+                
+                # Filter nutrients if needed
+                if len(nutrient_filter) < len(all_nutrients):
+                    nutrient_cols = [f"Target_{n}" for n in nutrient_filter]
+                    if 'ID' in predictions.columns:
+                        predictions = predictions[['ID'] + nutrient_cols]
+                    else:
+                        predictions = predictions[nutrient_cols]
+                
+                # Add metadata if requested
+                if include_metadata:
+                    from datetime import datetime
+                    predictions['_export_timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    predictions['_source'] = source_info
+                    predictions['_model_version'] = st.session_state.get('model_version', 'v1.0')
+                
+                st.session_state.export_data = predictions
+                st.session_state.export_format = export_format
+                
+                st.success(f"✅ Export generated successfully! {len(predictions):,} rows × {len(predictions.columns)} columns")
+                
+            except Exception as e:
+                st.error(f"❌ Error generating export: {str(e)}")
+                st.info("💡 Make sure models are trained and data is properly formatted.")
+    
+    # Preview and Download Section
+    if st.session_state.export_data is not None:
+        st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
+        st.markdown("#### 👁️ Preview & Download")
         
+        export_data = st.session_state.export_data
+        export_format = st.session_state.export_format
+        
+        # Show preview
+        with st.expander("📋 Preview Data (First 10 rows)", expanded=True):
+            st.dataframe(export_data.head(10), use_container_width=True)
+        
+        # Export statistics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Rows", f"{len(export_data):,}")
         with col2:
-            st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-            st.markdown("#### Submission Checklist")
-            st.markdown("""
-            - [x] All 13 nutrient columns
-            - [x] IDs match test set
-            - [x] Zero-mask applied
-            - [x] No NaN values
-            - [x] Non-negative values
-            - [x] UTF-8 encoding
-            """)
-            
-            st.markdown("#### Required Format")
-            st.code("ID,Target_Al,Target_B,...", language="csv")
-            st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        st.warning("👈 Please train models first in the 'Train Models' section", icon="👈")
+            st.metric("Total Columns", len(export_data.columns))
+        with col3:
+            nutrient_cols = [c for c in export_data.columns if c.startswith('Target_')]
+            st.metric("Nutrients", len(nutrient_cols))
+        with col4:
+            file_size_estimate = export_data.memory_usage(deep=True).sum() / 1024
+            st.metric("Est. Size", f"{file_size_estimate:.1f} KB")
+        
+        # Download buttons based on format
+        st.markdown("<div style='margin: 1.5rem 0;'></div>", unsafe_allow_html=True)
+        st.markdown("#### ⬇️ Download Files")
+        
+        dl_col1, dl_col2, dl_col3 = st.columns(3)
+        
+        with dl_col1:
+            # CSV Export
+            csv_data = export_data.to_csv(index=False)
+            st.download_button(
+                label="📄 Download CSV",
+                data=csv_data,
+                file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        with dl_col2:
+            # Excel Export
+            try:
+                import io
+                excel_buffer = io.BytesIO()
+                export_data.to_excel(excel_buffer, index=False, engine='openpyxl')
+                excel_buffer.seek(0)
+                st.download_button(
+                    label="📊 Download Excel",
+                    data=excel_buffer,
+                    file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+            except ImportError:
+                st.info("📊 Excel export requires openpyxl: `pip install openpyxl`")
+        
+        with dl_col3:
+            # JSON Export
+            json_data = export_data.to_json(orient='records', indent=2)
+            st.download_button(
+                label="📋 Download JSON",
+                data=json_data,
+                file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+        
+        # Additional formats row
+        dl_col4, dl_col5, dl_col6 = st.columns(3)
+        
+        with dl_col4:
+            # Parquet Export
+            try:
+                import io
+                parquet_buffer = io.BytesIO()
+                export_data.to_parquet(parquet_buffer, index=False)
+                parquet_buffer.seek(0)
+                st.download_button(
+                    label="🔷 Download Parquet",
+                    data=parquet_buffer,
+                    file_name=f"soil_predictions_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.parquet",
+                    mime="application/octet-stream",
+                    use_container_width=True
+                )
+            except ImportError:
+                st.info("🔷 Parquet requires pyarrow: `pip install pyarrow`")
+        
+        with dl_col5:
+            # Summary Report
+            summary_data = export_data.describe().to_csv()
+            st.download_button(
+                label="📈 Summary Stats",
+                data=summary_data,
+                file_name=f"summary_stats_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        with dl_col6:
+            # Reset export
+            if st.button("🔄 New Export", use_container_width=True):
+                st.session_state.export_data = None
+                st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ----- SECTION 4: SETTINGS -----
 elif st.session_state.current_section == 'settings':
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("### ⚙️ Application Settings")
+    st.markdown("<p style='color: #666;'>Customize your soil analysis experience. Changes are saved automatically.</p>", unsafe_allow_html=True)
     
+    # Initialize settings in session state if not present
+    if 'settings' not in st.session_state:
+        st.session_state.settings = {
+            'theme': 'Neutral (Default)',
+            'animations': True,
+            'show_advanced': False,
+            'crop_recommendations_count': 5,
+            'suitability_threshold': 50,
+            'export_format': 'Both CSV & PDF',
+            'include_charts_in_pdf': True,
+            'auto_save_analyses': True,
+            'show_crop_icons': True,
+            'show_progress_bars': True,
+            'default_input_method': 'Manual Entry',
+            'enable_tooltips': True,
+            'show_success_messages': True
+        }
+    
+    # Row 1: Visual & UI Settings
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
     col1, col2 = st.columns(2, gap="large")
     
     with col1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### Visual Preferences")
-        st.markdown("*UI preferences are applied automatically*")
+        st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">', unsafe_allow_html=True)
+        st.markdown("#### 🎨 Visual Preferences")
         
-        st.selectbox("Color Theme", ["Neutral (Default)", "Purple", "Orange", "Green"])
-        st.checkbox("Enable animations", value=True)
-        st.checkbox("Show advanced options", value=False)
+        theme = st.selectbox(
+            "Color Theme", 
+            ["Neutral (Default)", "Ocean Blue", "Forest Green", "Sunset Orange", "Royal Purple"],
+            index=["Neutral (Default)", "Ocean Blue", "Forest Green", "Sunset Orange", "Royal Purple"].index(st.session_state.settings['theme'])
+        )
+        st.session_state.settings['theme'] = theme
+        
+        col_anim, col_tooltip = st.columns(2)
+        with col_anim:
+            animations = st.checkbox("Enable animations", value=st.session_state.settings['animations'])
+            st.session_state.settings['animations'] = animations
+        with col_tooltip:
+            enable_tooltips = st.checkbox("Show tooltips", value=st.session_state.settings['enable_tooltips'])
+            st.session_state.settings['enable_tooltips'] = enable_tooltips
+        
+        show_advanced = st.checkbox("Show advanced analysis options", value=st.session_state.settings['show_advanced'])
+        st.session_state.settings['show_advanced'] = show_advanced
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("#### Data Preferences")
+        st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);">', unsafe_allow_html=True)
+        st.markdown("#### 🔧 Analysis Preferences")
         
-        st.number_input("Default sample size for visualization", min_value=100, max_value=10000, value=2000)
-        st.selectbox("Default coordinate system", ["WGS84", "UTM", "Local Grid"])
-        st.multiselect(
-            "Auto-include features",
-            ["Elevation", "Slope", "Aspect", "NDVI", "Rainfall", "Temperature"],
-            default=["Elevation", "Rainfall"]
+        default_input = st.selectbox(
+            "Default Input Method",
+            ["Manual Entry", "File Upload (CSV/JSON)"],
+            index=["Manual Entry", "File Upload (CSV/JSON)"].index(st.session_state.settings['default_input_method'])
         )
+        st.session_state.settings['default_input_method'] = default_input
+        
+        sample_size = st.slider("Default sample size for maps", min_value=100, max_value=5000, value=2000, step=100)
+        st.session_state.settings['sample_size'] = sample_size
+        
+        show_success = st.checkbox("Show success messages", value=st.session_state.settings['show_success_messages'])
+        st.session_state.settings['show_success_messages'] = show_success
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Action buttons
+    # Row 2: Crop Recommendation Settings
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">', unsafe_allow_html=True)
+    st.markdown("#### 🌾 Crop Recommendation Settings")
+    st.markdown("<p style='color: #666; font-size: 0.9rem;'>Customize how crop recommendations are displayed</p>", unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("💾 Save Preferences", use_container_width=True):
-            st.success("Preferences saved!", icon="✅")
+        crop_count = st.number_input(
+            "Number of crops to recommend",
+            min_value=3,
+            max_value=10,
+            value=st.session_state.settings['crop_recommendations_count'],
+            step=1
+        )
+        st.session_state.settings['crop_recommendations_count'] = crop_count
+    
+    with col2:
+        threshold = st.slider(
+            "Minimum suitability threshold (%)",
+            min_value=0,
+            max_value=100,
+            value=st.session_state.settings['suitability_threshold'],
+            step=5
+        )
+        st.session_state.settings['suitability_threshold'] = threshold
+    
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        show_icons = st.checkbox("Show crop emojis", value=st.session_state.settings['show_crop_icons'])
+        st.session_state.settings['show_crop_icons'] = show_icons
+        show_progress = st.checkbox("Show progress bars", value=st.session_state.settings['show_progress_bars'])
+        st.session_state.settings['show_progress_bars'] = show_progress
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Row 3: Export & Download Settings
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);">', unsafe_allow_html=True)
+    st.markdown("#### 💾 Export & Download Settings")
+    st.markdown("<p style='color: #666; font-size: 0.9rem;'>Configure default export options for analysis reports</p>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        export_format = st.selectbox(
+            "Default Export Format",
+            ["Both CSV & PDF", "CSV Only", "PDF Only"],
+            index=["Both CSV & PDF", "CSV Only", "PDF Only"].index(st.session_state.settings['export_format'])
+        )
+        st.session_state.settings['export_format'] = export_format
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        include_charts = st.checkbox(
+            "Include charts in PDF",
+            value=st.session_state.settings['include_charts_in_pdf'],
+            help="Embed visualizations in PDF exports"
+        )
+        st.session_state.settings['include_charts_in_pdf'] = include_charts
+    
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        auto_save = st.checkbox(
+            "Auto-save analyses",
+            value=st.session_state.settings['auto_save_analyses'],
+            help="Automatically save analysis results for history"
+        )
+        st.session_state.settings['auto_save_analyses'] = auto_save
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Row 4: Data Management & History
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);">', unsafe_allow_html=True)
+    st.markdown("#### 📊 Data Management")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Analysis History**")
+        analyses_count = st.session_state.get('analyses_count', 0)
+        st.markdown(f"<p>Total analyses performed this session: <strong>{analyses_count}</strong></p>", unsafe_allow_html=True)
+        
+        if analyses_count > 0:
+            if st.button("🗑️ Clear Session History", use_container_width=True):
+                st.session_state.analyses_count = 0
+                st.success("Session history cleared!")
+                st.rerun()
+        else:
+            st.button("🗑️ Clear Session History", use_container_width=True, disabled=True)
+    
+    with col2:
+        st.markdown("**Application Info**")
+        st.markdown("""
+        <div style="font-size: 0.9rem; color: #666;">
+        <p>🌱 <strong>Rhea Soil Nutrient Predictor</strong></p>
+        <p>📦 Version: 2.0</p>
+        <p>🔧 Features: 24 crops, PDF export, Batch analysis</p>
+        <p>📅 Last updated: Feb 2026</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Action buttons
+    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("💾 Save All Settings", use_container_width=True, type="primary"):
+            st.success("All preferences saved!", icon="✅")
     
     with col2:
         if st.button("🔄 Reset to Defaults", use_container_width=True):
-            st.session_state.clear()
-            st.success("All settings reset!", icon="🔄")
+            # Reset settings to defaults
+            st.session_state.settings = {
+                'theme': 'Neutral (Default)',
+                'animations': True,
+                'show_advanced': False,
+                'crop_recommendations_count': 5,
+                'suitability_threshold': 50,
+                'export_format': 'Both CSV & PDF',
+                'include_charts_in_pdf': True,
+                'auto_save_analyses': True,
+                'show_crop_icons': True,
+                'show_progress_bars': True,
+                'default_input_method': 'Manual Entry',
+                'enable_tooltips': True,
+                'show_success_messages': True
+            }
+            st.success("All settings reset to defaults!", icon="🔄")
+            st.rerun()
     
     with col3:
-        if st.button("📥 Export Config", use_container_width=True):
-            st.info("Configuration exported!")
+        if st.button("📥 Export Settings", use_container_width=True):
+            import json
+            settings_json = json.dumps(st.session_state.settings, indent=2)
+            st.download_button(
+                label="Download Settings JSON",
+                data=settings_json,
+                file_name="soil_predictor_settings.json",
+                mime="application/json",
+                use_container_width=True
+            )
 
 # ============= FOOTER =============
 st.markdown("<div style='margin: 3rem 0; padding: 2rem; text-align: center; background: rgba(255, 255, 255, 0.8); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.08);'>", unsafe_allow_html=True)

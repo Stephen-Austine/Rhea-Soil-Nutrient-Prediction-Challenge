@@ -16,3 +16,6 @@ geopandas>=0.12.0
 
 # Utilities
 tqdm>=4.64.0
+
+# PDF Generation
+fpdf2>=2.7.0
