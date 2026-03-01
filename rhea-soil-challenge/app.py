@@ -1843,10 +1843,10 @@ elif st.session_state.current_section == 'simple':
         if results.get('error', False):
             st.markdown("### ❌ Location Not Available")
             st.markdown(f"""
-                <div style="padding: 2rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+                <div style="padding: 2.5rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
                             border-radius: 12px; border-left: 4px solid #f59e0b; text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
-                    <div style="color: #92400e; line-height: 1.6;">
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem;">📍</div>
+                    <div style="color: #92400e; line-height: 1.8; font-size: 1.15rem;">
                         {results['message']}
                     </div>
                 </div>
@@ -1854,10 +1854,21 @@ elif st.session_state.current_section == 'simple':
             
             st.markdown("<div style='margin: 2rem 0;'></div>", unsafe_allow_html=True)
             
-            # Option to try again
-            if st.button("🔄 Try Different Location", use_container_width=True):
-                st.session_state.simple_analysis_results = None
-                st.rerun()
+            # Buttons for user options
+            btn_col1, btn_col2 = st.columns(2)
+            
+            with btn_col1:
+                # Option to try again with different location
+                if st.button("🔄 Try Different Location", use_container_width=True):
+                    st.session_state.simple_analysis_results = None
+                    st.rerun()
+            
+            with btn_col2:
+                # Button to navigate to Advanced Analysis
+                if st.button("🔬 Go to Advanced Analysis →", type="primary", use_container_width=True):
+                    st.session_state.simple_analysis_results = None
+                    st.session_state.current_section = 'analyze'
+                    st.rerun()
         
         else:
             # Location is valid - show recommendations
