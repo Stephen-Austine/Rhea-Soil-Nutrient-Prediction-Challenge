@@ -422,7 +422,218 @@ header {visibility: hidden;}
 </style>
 """
 
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+# ============= DARK MODE CSS =============
+DARK_MODE_CSS = """
+<style>
+/* ===== DARK MODE - ROOT ===== */
+.stApp {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+}
+
+/* ===== TEXT COLORS ===== */
+.stApp, .stMarkdown, p, h1, h2, h3, h4, h5, h6, label {
+    color: #f1f5f9 !important;
+}
+
+/* Subtitle text */
+.stMarkdown p {
+    color: #cbd5e1 !important;
+}
+
+/* ===== CARDS ===== */
+.glass-card {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border: 1px solid rgba(71, 85, 105, 0.5) !important;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)) !important;
+    border: 2px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.metric-value { color: #4ade80 !important; }
+.metric-label { color: #86efac !important; }
+
+/* ===== FORM ELEMENTS ===== */
+/* Selectbox, NumberInput containers */
+.stSelectbox > div > div,
+.stNumberInput > div > div {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+}
+
+/* Input text */
+.stSelectbox > div > div > div,
+.stNumberInput > div > div > input {
+    color: #f1f5f9 !important;
+}
+
+/* Slider */
+.stSlider > div > div { background-color: #334155 !important; }
+.stSlider > div > div > div > div { background-color: #3b82f6 !important; }
+
+/* Checkbox label */
+.stCheckbox > label { color: #f1f5f9 !important; }
+
+/* Toggle switch */
+[data-testid="stToggle"] > div > div { background-color: #334155 !important; }
+[data-testid="stToggle"][aria-checked="true"] > div > div { background-color: #3b82f6 !important; }
+
+/* ===== BUTTONS ===== */
+.stButton > button {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+.stButton > button:hover { background-color: #2563eb !important; }
+
+/* ===== ALERTS ===== */
+.stAlert { background-color: rgba(30, 41, 59, 0.9) !important; }
+
+[data-testid="stAlertContentSuccess"] {
+    background-color: rgba(22, 163, 74, 0.2) !important;
+    border-left-color: #22c55e !important;
+}
+
+[data-testid="stAlertContentError"] {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-left-color: #ef4444 !important;
+}
+
+[data-testid="stAlertContentInfo"] {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    border-left-color: #3b82f6 !important;
+}
+
+.stAlert [data-testid="stMarkdownContainer"] p { color: #f1f5f9 !important; }
+
+/* ===== DATAFRAMES & TABLES ===== */
+[data-testid="stDataFrame"] { background-color: #1e293b !important; }
+[data-testid="stDataFrame"] th {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+[data-testid="stDataFrame"] td {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+/* ===== NAVIGATION ===== */
+.navbar {
+    background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%) !important;
+}
+
+/* ===== EXPANDERS ===== */
+.streamlit-expanderHeader {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+}
+
+.streamlit-expanderContent {
+    background-color: #0f172a !important;
+    color: #f1f5f9 !important;
+}
+
+/* ===== TABS ===== */
+.stTabs [data-baseweb="tab-list"] {
+    background-color: #1e293b !important;
+    border-bottom-color: #475569 !important;
+}
+
+.stTabs [data-baseweb="tab"] { color: #94a3b8 !important; }
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    color: #3b82f6 !important;
+    border-bottom-color: #3b82f6 !important;
+}
+
+/* ===== FILE UPLOADER ===== */
+.stFileUploader > div > div {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+}
+
+/* ===== PLOTLY CHARTS - TEXT VISIBILITY ===== */
+/* Make plot text white/light in dark mode so it's visible on dark backgrounds */
+.js-plotly-plot .plotly text,
+.js-plotly-plot .plotly .gtitle,
+.js-plotly-plot .plotly .xtitle,
+.js-plotly-plot .plotly .ytitle,
+.js-plotly-plot .plotly .legendtext,
+.js-plotly-plot .plotly .g-xtitle,
+.js-plotly-plot .plotly .g-ytitle,
+.js-plotly-plot .plotly .axis-title,
+.js-plotly-plot .plotly .scatterlayer .trace text {
+    fill: #f1f5f9 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Axis labels and tick text */
+.js-plotly-plot .plotly .g-xticklabel,
+.js-plotly-plot .plotly .g-yticklabel,
+.js-plotly-plot .plotly .xtick text,
+.js-plotly-plot .plotly .ytick text {
+    fill: #cbd5e1 !important;
+}
+
+/* Hover labels */
+.js-plotly-plot .plotly .hovertext {
+    fill: #0f172a !important;
+}
+
+/* Legend background */
+.js-plotly-plot .plotly .legend {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+}
+
+/* ===== PROGRESS BARS ===== */
+.stProgress > div > div { background-color: #334155 !important; }
+.stProgress > div > div > div > div {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+}
+
+/* ===== LINKS ===== */
+a { color: #60a5fa !important; }
+a:hover { color: #93c5fd !important; }
+
+/* ===== TOOLTIPS ===== */
+[data-testid="stTooltip"] {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #475569 !important;
+}
+
+/* ===== METRICS ===== */
+[data-testid="stMetricValue"] { color: #f1f5f9 !important; }
+[data-testid="stMetricLabel"] { color: #94a3b8 !important; }
+[data-testid="stMetricDelta"] { color: #22c55e !important; }
+
+/* ===== CODE BLOCKS ===== */
+.stCodeBlock { background-color: #1e293b !important; }
+.stCodeBlock code { color: #f1f5f9 !important; }
+
+/* ===== FOOTER ===== */
+footer { background: rgba(30, 41, 59, 0.8) !important; }
+footer p { color: #94a3b8 !important; }
+
+/* ===== HORIZONTAL RULE ===== */
+hr { border-color: #475569 !important; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { background-color: #1e293b !important; }
+::-webkit-scrollbar-thumb { background-color: #475569 !important; }
+</style>
+"""
+
+# ============= APPLY CSS BASED ON DARK MODE SETTING =============
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+if st.session_state.dark_mode:
+    st.markdown(CUSTOM_CSS + DARK_MODE_CSS, unsafe_allow_html=True)
+else:
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ============= NAVIGATION BAR =============
 def render_navbar():
@@ -1577,9 +1788,9 @@ elif st.session_state.current_section == 'train':
         st.markdown("#### Model Selection")
         model_type = st.selectbox(
             "Algorithm",
-            ["XGBoost", "LightGBM", "Random Forest"],
+            ["XGBoost", "LightGBM", "Random Forest", "Ridge", "Lasso", "ElasticNet"],
             index=0,
-            help="XGBoost recommended for best performance"
+            help="XGBoost recommended for best performance. Ridge/Lasso/ElasticNet are linear models with regularization."
         )
         cv_folds = st.slider("Cross-Validation Folds", 3, 10, 5)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1587,14 +1798,35 @@ elif st.session_state.current_section == 'train':
     with col2:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### Hyperparameters")
-        max_depth = st.slider("Max Tree Depth", 3, 15, 8)
-        learning_rate = st.slider("Learning Rate", 0.01, 0.3, 0.1, step=0.01)
+        
+        # Show different parameters based on model type
+        if model_type in ["Ridge", "Lasso", "ElasticNet"]:
+            alpha = st.slider("Regularization (Alpha)", 0.01, 10.0, 1.0, step=0.01)
+            if model_type == "ElasticNet":
+                l1_ratio = st.slider("L1 Ratio", 0.0, 1.0, 0.5, step=0.05)
+            else:
+                l1_ratio = 0.5
+            # Set tree-based params to None for linear models
+            max_depth = 8
+            learning_rate = 0.1
+            n_est = 200
+        else:
+            max_depth = st.slider("Max Tree Depth", 3, 15, 8)
+            learning_rate = st.slider("Learning Rate", 0.01, 0.3, 0.1, step=0.01)
+            alpha = 1.0
+            l1_ratio = 0.5
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("#### Training Options")
-        n_est = st.slider("Number of Estimators", 50, 500, 200, step=50)
+        # Only show n_estimators for tree-based models
+        if model_type not in ["Ridge", "Lasso", "ElasticNet"]:
+            n_est = st.slider("Number of Estimators", 50, 500, 200, step=50)
+        else:
+            n_est = 200
+            st.markdown("<p style='color: #666; font-size: 0.85rem;'>ℹ️ Linear models don't use estimators parameter</p>", unsafe_allow_html=True)
         use_geo = st.checkbox("Use Geospatial Features", value=True)
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -1648,7 +1880,9 @@ elif st.session_state.current_section == 'train':
                         cv_folds=cv_folds,
                         max_depth=max_depth,
                         learning_rate=learning_rate,
-                        n_estimators=n_est
+                        n_estimators=n_est,
+                        alpha=alpha,
+                        l1_ratio=l1_ratio
                     )
                     
                     status_text.text("Loading and preprocessing data...")
@@ -2028,220 +2262,107 @@ elif st.session_state.current_section == 'submit':
 # ----- SECTION 4: SETTINGS -----
 elif st.session_state.current_section == 'settings':
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### ⚙️ Application Settings")
-    st.markdown("<p style='color: #666;'>Customize your soil analysis experience. Changes are saved automatically.</p>", unsafe_allow_html=True)
+    st.markdown("### ⚙️ Settings")
+    st.markdown("<p style='color: #666;'>Customize your soil analysis experience</p>", unsafe_allow_html=True)
     
     # Initialize settings in session state if not present
     if 'settings' not in st.session_state:
         st.session_state.settings = {
-            'theme': 'Neutral (Default)',
-            'animations': True,
-            'show_advanced': False,
+            'dark_mode': False,
             'crop_recommendations_count': 5,
             'suitability_threshold': 50,
             'export_format': 'Both CSV & PDF',
-            'include_charts_in_pdf': True,
-            'auto_save_analyses': True,
+            'default_input_method': 'Manual Entry',
             'show_crop_icons': True,
             'show_progress_bars': True,
-            'default_input_method': 'Manual Entry',
-            'enable_tooltips': True,
-            'show_success_messages': True
         }
     
-    # Row 1: Visual & UI Settings
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
+    # Sync dark_mode between session_state.settings and session_state.dark_mode
+    if st.session_state.settings.get('dark_mode', False) != st.session_state.dark_mode:
+        st.session_state.dark_mode = st.session_state.settings.get('dark_mode', False)
+    
+    # Create two columns for layout
     col1, col2 = st.columns(2, gap="large")
     
     with col1:
-        st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">', unsafe_allow_html=True)
-        st.markdown("#### 🎨 Visual Preferences")
+        # Visual Preferences
+        st.markdown("#### 🎨 Appearance")
+        dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.settings.get('dark_mode', False), help="Toggle between light and dark theme")
+        if dark_mode != st.session_state.settings.get('dark_mode', False):
+            st.session_state.settings['dark_mode'] = dark_mode
+            st.session_state.dark_mode = dark_mode
+            st.rerun()
         
-        theme = st.selectbox(
-            "Color Theme", 
-            ["Neutral (Default)", "Ocean Blue", "Forest Green", "Sunset Orange", "Royal Purple"],
-            index=["Neutral (Default)", "Ocean Blue", "Forest Green", "Sunset Orange", "Royal Purple"].index(st.session_state.settings['theme'])
-        )
-        st.session_state.settings['theme'] = theme
+        st.markdown("<br>", unsafe_allow_html=True)
         
-        col_anim, col_tooltip = st.columns(2)
-        with col_anim:
-            animations = st.checkbox("Enable animations", value=st.session_state.settings['animations'])
-            st.session_state.settings['animations'] = animations
-        with col_tooltip:
-            enable_tooltips = st.checkbox("Show tooltips", value=st.session_state.settings['enable_tooltips'])
-            st.session_state.settings['enable_tooltips'] = enable_tooltips
-        
-        show_advanced = st.checkbox("Show advanced analysis options", value=st.session_state.settings['show_advanced'])
-        st.session_state.settings['show_advanced'] = show_advanced
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);">', unsafe_allow_html=True)
+        # Analysis Preferences
         st.markdown("#### 🔧 Analysis Preferences")
-        
         default_input = st.selectbox(
             "Default Input Method",
             ["Manual Entry", "File Upload (CSV/JSON)"],
-            index=["Manual Entry", "File Upload (CSV/JSON)"].index(st.session_state.settings['default_input_method'])
+            index=["Manual Entry", "File Upload (CSV/JSON)"].index(st.session_state.settings.get('default_input_method', 'Manual Entry'))
         )
         st.session_state.settings['default_input_method'] = default_input
         
-        sample_size = st.slider("Default sample size for maps", min_value=100, max_value=5000, value=2000, step=100)
-        st.session_state.settings['sample_size'] = sample_size
-        
-        show_success = st.checkbox("Show success messages", value=st.session_state.settings['show_success_messages'])
-        st.session_state.settings['show_success_messages'] = show_success
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Row 2: Crop Recommendation Settings
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">', unsafe_allow_html=True)
-    st.markdown("#### 🌾 Crop Recommendation Settings")
-    st.markdown("<p style='color: #666; font-size: 0.9rem;'>Customize how crop recommendations are displayed</p>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        crop_count = st.number_input(
-            "Number of crops to recommend",
-            min_value=3,
-            max_value=10,
-            value=st.session_state.settings['crop_recommendations_count'],
-            step=1
-        )
-        st.session_state.settings['crop_recommendations_count'] = crop_count
-    
-    with col2:
-        threshold = st.slider(
-            "Minimum suitability threshold (%)",
-            min_value=0,
-            max_value=100,
-            value=st.session_state.settings['suitability_threshold'],
-            step=5
-        )
-        st.session_state.settings['suitability_threshold'] = threshold
-    
-    with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        show_icons = st.checkbox("Show crop emojis", value=st.session_state.settings['show_crop_icons'])
-        st.session_state.settings['show_crop_icons'] = show_icons
-        show_progress = st.checkbox("Show progress bars", value=st.session_state.settings['show_progress_bars'])
-        st.session_state.settings['show_progress_bars'] = show_progress
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Row 3: Export & Download Settings
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);">', unsafe_allow_html=True)
-    st.markdown("#### 💾 Export & Download Settings")
-    st.markdown("<p style='color: #666; font-size: 0.9rem;'>Configure default export options for analysis reports</p>", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
+        
+        # Export Settings
+        st.markdown("#### 💾 Export Format")
         export_format = st.selectbox(
             "Default Export Format",
             ["Both CSV & PDF", "CSV Only", "PDF Only"],
-            index=["Both CSV & PDF", "CSV Only", "PDF Only"].index(st.session_state.settings['export_format'])
+            index=["Both CSV & PDF", "CSV Only", "PDF Only"].index(st.session_state.settings.get('export_format', 'Both CSV & PDF'))
         )
         st.session_state.settings['export_format'] = export_format
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        include_charts = st.checkbox(
-            "Include charts in PDF",
-            value=st.session_state.settings['include_charts_in_pdf'],
-            help="Embed visualizations in PDF exports"
+        # Crop Recommendations
+        st.markdown("#### 🌾 Crop Recommendations")
+        crop_count = st.number_input(
+            "Number of crops to display",
+            min_value=3,
+            max_value=10,
+            value=st.session_state.settings.get('crop_recommendations_count', 5),
+            step=1
         )
-        st.session_state.settings['include_charts_in_pdf'] = include_charts
-    
-    with col3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        auto_save = st.checkbox(
-            "Auto-save analyses",
-            value=st.session_state.settings['auto_save_analyses'],
-            help="Automatically save analysis results for history"
-        )
-        st.session_state.settings['auto_save_analyses'] = auto_save
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Row 4: Data Management & History
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="glass-card" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);">', unsafe_allow_html=True)
-    st.markdown("#### 📊 Data Management")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("**Analysis History**")
-        analyses_count = st.session_state.get('analyses_count', 0)
-        st.markdown(f"<p>Total analyses performed this session: <strong>{analyses_count}</strong></p>", unsafe_allow_html=True)
+        st.session_state.settings['crop_recommendations_count'] = crop_count
         
-        if analyses_count > 0:
-            if st.button("🗑️ Clear Session History", use_container_width=True):
-                st.session_state.analyses_count = 0
-                st.success("Session history cleared!")
-                st.rerun()
-        else:
-            st.button("🗑️ Clear Session History", use_container_width=True, disabled=True)
+        threshold = st.slider(
+            "Minimum suitability threshold (%)",
+            min_value=0,
+            max_value=100,
+            value=st.session_state.settings.get('suitability_threshold', 50),
+            step=5
+        )
+        st.session_state.settings['suitability_threshold'] = threshold
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Display Options
+        st.markdown("#### 👁️ Display Options")
+        show_icons = st.checkbox("Show crop emojis", value=st.session_state.settings.get('show_crop_icons', True))
+        st.session_state.settings['show_crop_icons'] = show_icons
+        show_progress = st.checkbox("Show progress bars", value=st.session_state.settings.get('show_progress_bars', True))
+        st.session_state.settings['show_progress_bars'] = show_progress
     
-    with col2:
-        st.markdown("**Application Info**")
-        st.markdown("""
-        <div style="font-size: 0.9rem; color: #666;">
-        <p>🌱 <strong>Rhea Soil Nutrient Predictor</strong></p>
-        <p>📦 Version: 2.0</p>
-        <p>🔧 Features: 24 crops, PDF export, Batch analysis</p>
-        <p>📅 Last updated: Feb 2026</p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Reset Button
+    if st.button("🔄 Reset to Defaults", use_container_width=True):
+        st.session_state.settings = {
+            'dark_mode': False,
+            'crop_recommendations_count': 5,
+            'suitability_threshold': 50,
+            'export_format': 'Both CSV & PDF',
+            'default_input_method': 'Manual Entry',
+            'show_crop_icons': True,
+            'show_progress_bars': True,
+        }
+        st.session_state.dark_mode = False
+        st.success("Settings reset to defaults!", icon="🔄")
+        st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Action buttons
-    st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("💾 Save All Settings", use_container_width=True, type="primary"):
-            st.success("All preferences saved!", icon="✅")
-    
-    with col2:
-        if st.button("🔄 Reset to Defaults", use_container_width=True):
-            # Reset settings to defaults
-            st.session_state.settings = {
-                'theme': 'Neutral (Default)',
-                'animations': True,
-                'show_advanced': False,
-                'crop_recommendations_count': 5,
-                'suitability_threshold': 50,
-                'export_format': 'Both CSV & PDF',
-                'include_charts_in_pdf': True,
-                'auto_save_analyses': True,
-                'show_crop_icons': True,
-                'show_progress_bars': True,
-                'default_input_method': 'Manual Entry',
-                'enable_tooltips': True,
-                'show_success_messages': True
-            }
-            st.success("All settings reset to defaults!", icon="🔄")
-            st.rerun()
-    
-    with col3:
-        if st.button("📥 Export Settings", use_container_width=True):
-            import json
-            settings_json = json.dumps(st.session_state.settings, indent=2)
-            st.download_button(
-                label="Download Settings JSON",
-                data=settings_json,
-                file_name="soil_predictor_settings.json",
-                mime="application/json",
-                use_container_width=True
-            )
 
 # ============= FOOTER =============
 st.markdown("<div style='margin: 3rem 0; padding: 2rem; text-align: center; background: rgba(255, 255, 255, 0.8); border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.08);'>", unsafe_allow_html=True)

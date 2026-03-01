@@ -11,6 +11,7 @@ import json
 import warnings
 from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.metrics import mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
@@ -34,21 +35,23 @@ except ImportError:
 class SoilNutrientPredictor:
     """
     Multi-output regressor for soil nutrient prediction.
-    Supports XGBoost, LightGBM, and Random Forest algorithms.
+    Supports XGBoost, LightGBM, Random Forest, Ridge, Lasso, and ElasticNet algorithms.
     """
     
     def __init__(self, model_type='xgboost', cv_folds=5, max_depth=8, 
-                 learning_rate=0.1, n_estimators=200, random_state=42):
+                 learning_rate=0.1, n_estimators=200, random_state=42, alpha=1.0, l1_ratio=0.5):
         """
         Initialize the predictor.
         
         Args:
-            model_type: 'xgboost', 'lightgbm', or 'random_forest'
+            model_type: 'xgboost', 'lightgbm', 'random_forest', 'ridge', 'lasso', or 'elasticnet'
             cv_folds: Number of cross-validation folds
             max_depth: Maximum tree depth
             learning_rate: Learning rate for boosting
             n_estimators: Number of estimators/trees
             random_state: Random seed for reproducibility
+            alpha: Regularization strength for Ridge/Lasso/ElasticNet (default: 1.0)
+            l1_ratio: The ElasticNet mixing parameter (0 <= l1_ratio <= 1)
         """
         self.model_type = model_type
         self.cv_folds = cv_folds
@@ -56,6 +59,8 @@ class SoilNutrientPredictor:
         self.learning_rate = learning_rate
         self.n_estimators = n_estimators
         self.random_state = random_state
+        self.alpha = alpha
+        self.l1_ratio = l1_ratio
         
         self.models = {}
         self.feature_cols = []
@@ -140,6 +145,24 @@ class SoilNutrientPredictor:
                 max_depth=self.max_depth,
                 random_state=self.random_state,
                 n_jobs=-1
+            )
+        elif self.model_type == 'ridge':
+            return Ridge(
+                alpha=self.alpha,
+                random_state=self.random_state
+            )
+        elif self.model_type == 'lasso':
+            return Lasso(
+                alpha=self.alpha,
+                random_state=self.random_state,
+                max_iter=2000
+            )
+        elif self.model_type == 'elasticnet':
+            return ElasticNet(
+                alpha=self.alpha,
+                l1_ratio=self.l1_ratio,
+                random_state=self.random_state,
+                max_iter=2000
             )
         else:
             # Fallback to Random Forest if unknown model type
@@ -394,6 +417,8 @@ class SoilNutrientPredictor:
             'max_depth': self.max_depth,
             'learning_rate': self.learning_rate,
             'n_estimators': self.n_estimators,
+            'alpha': self.alpha,
+            'l1_ratio': self.l1_ratio,
             'feature_cols': self.feature_cols,
             'nutrients': self.nutrients,
             'training_results': self.training_results
@@ -420,6 +445,8 @@ class SoilNutrientPredictor:
         self.max_depth = metadata['max_depth']
         self.learning_rate = metadata['learning_rate']
         self.n_estimators = metadata['n_estimators']
+        self.alpha = metadata.get('alpha', 1.0)
+        self.l1_ratio = metadata.get('l1_ratio', 0.5)
         self.feature_cols = metadata['feature_cols']
         self.nutrients = metadata['nutrients']
         self.training_results = metadata.get('training_results', {})

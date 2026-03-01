@@ -4,6 +4,8 @@
   "max_depth": 8,
   "learning_rate": 0.1,
   "n_estimators": 200,
+  "alpha": 1.0,
+  "l1_ratio": 0.5,
   "feature_cols": [
     "Latitude",
     "Longitude",
