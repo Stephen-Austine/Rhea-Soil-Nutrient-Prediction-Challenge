@@ -71,7 +71,7 @@ This project supports **Digital Africa** and **Rhea** in their mission to:
 
 ---
 
-## ✨ Features
+## Features
 
 -  **Glassmorphism UI** - Beautiful Streamlit interface with frosted glass effects
 -  **Multi-Nutrient Prediction** - Simultaneously predicts 13 soil nutrients
