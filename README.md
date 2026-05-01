@@ -1,4 +1,4 @@
-# 🌱 Rhea Soil Nutrient Prediction Challenge
+# Rhea Soil Nutrient Prediction Challenge
 
 > **ML solution for predicting 13 soil nutrients across Africa using geospatial data and gradient boosting**
 
@@ -9,7 +9,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#-overview)
 - [Challenge Details](#-challenge-details)
@@ -29,7 +29,7 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 This repository contains a complete, competition-ready machine learning solution for the **Rhea Soil Nutrient Prediction Challenge** hosted on [Zindi](https://zindi.africa/competitions/rhea-soil-nutrient-prediction-challenge).
 
@@ -38,14 +38,14 @@ The solution predicts **13 soil nutrient concentrations** (Al, B, Ca, Cu, Fe, K,
 ### Impact
 
 This project supports **Digital Africa** and **Rhea** in their mission to:
-- 🌍 Provide soil insights to smallholder farmers
-- 📊 Enable precision fertilizer recommendations
-- 🌱 Improve crop yields and climate resilience
-- ♻️ Promote sustainable land management practices
+-  Provide soil insights to smallholder farmers
+-  Enable precision fertilizer recommendations
+-  Improve crop yields and climate resilience
+-  Promote sustainable land management practices
 
 ---
 
-## 🏆 Challenge Details
+## Challenge Details
 
 | Attribute | Value |
 |-----------|-------|
@@ -73,19 +73,19 @@ This project supports **Digital Africa** and **Rhea** in their mission to:
 
 ## ✨ Features
 
-- ✅ **Glassmorphism UI** - Beautiful Streamlit interface with frosted glass effects
-- ✅ **Multi-Nutrient Prediction** - Simultaneously predicts 13 soil nutrients
-- ✅ **Geospatial Feature Engineering** - Leverages latitude, longitude, and depth information
-- ✅ **Zero-Mask Enforcement** - Automatically applies TargetPred_To_Keep constraints
-- ✅ **Multiple Model Options** - XGBoost, LightGBM, and Random Forest support
-- ✅ **Reproducible Pipeline** - Fixed random seeds for code review compliance
-- ✅ **Open-Source Compliant** - Uses only freely available packages (no commercial licenses)
-- ✅ **Cross-Validation** - Built-in k-fold CV for reliable RMSE estimation
-- ✅ **Model Serialization** - Save and load trained models for deployment
+-  **Glassmorphism UI** - Beautiful Streamlit interface with frosted glass effects
+-  **Multi-Nutrient Prediction** - Simultaneously predicts 13 soil nutrients
+-  **Geospatial Feature Engineering** - Leverages latitude, longitude, and depth information
+-  **Zero-Mask Enforcement** - Automatically applies TargetPred_To_Keep constraints
+-  **Multiple Model Options** - XGBoost, LightGBM, and Random Forest support
+-  **Reproducible Pipeline** - Fixed random seeds for code review compliance
+-  **Open-Source Compliant** - Uses only freely available packages (no commercial licenses)
+-  **Cross-Validation** - Built-in k-fold CV for reliable RMSE estimation
+-  **Model Serialization** - Save and load trained models for deployment
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
@@ -128,7 +128,7 @@ python -c "import pandas, numpy, sklearn, xgboost, streamlit; print('✅ All dep
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Streamlit UI (Recommended)
 
@@ -182,7 +182,7 @@ predictor.save('models/')
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 rhea-soil-nutrient-prediction/
@@ -213,7 +213,7 @@ rhea-soil-nutrient-prediction/
 
 ---
 
-## 📊 Data Description
+## Data Description
 
 ### Training Data (Train.csv)
 
@@ -255,7 +255,7 @@ This file indicates which nutrient values should be predicted (1) vs. forced to 
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 ### Overview
 
@@ -309,13 +309,13 @@ The solution uses a **multi-output regression approach** where separate models a
 
 ## 📖 Usage Guide
 
-### Tab 1: Explore (📊)
+### Tab 1: Explore
 
 - **Geographic Distribution Map** - Visualize sample locations
 - **Nutrient Correlation Heatmap** - Understand relationships between nutrients
 - **Data Completeness Chart** - Identify missing values
 
-### Tab 2: Train (🔬)
+### Tab 2: Train
 
 1. Select algorithm (XGBoost recommended)
 2. Configure hyperparameters
@@ -323,7 +323,7 @@ The solution uses a **multi-output regression approach** where separate models a
 4. Click "Train Models"
 5. View cross-validation RMSE scores
 
-### Tab 3: Submit (📤)
+### Tab 3: Submit
 
 1. Click "Generate Predictions"
 2. Review submission preview
@@ -331,7 +331,7 @@ The solution uses a **multi-output regression approach** where separate models a
 4. Download submission.csv
 5. Upload to Zindi
 
-### Tab 4: Settings (⚙️)
+### Tab 4: Settings
 
 - UI preferences (auto-applied)
 - Reset fields option
@@ -339,7 +339,7 @@ The solution uses a **multi-output regression approach** where separate models a
 
 ---
 
-## 📤 Submission Format
+## Submission Format
 
 ### Required Structure
 
@@ -400,7 +400,7 @@ model = XGBRegressor(random_state=42)
 
 ---
 
-## 📈 Performance Benchmarks
+## Performance Benchmarks
 
 ### Expected CV RMSE by Nutrient
 
@@ -431,7 +431,7 @@ model = XGBRegressor(random_state=42)
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
@@ -458,7 +458,7 @@ Per Zindi competition rules, any code improvements must be shared publicly on th
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
@@ -471,7 +471,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **[Zindi](https://zindi.africa/)** - Competition platform
 - **[Rhea](https://www.rhea.africa/)** - Soil health management company
@@ -481,7 +481,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 📞 Support
+## Support
 
 ### Resources
 
@@ -505,7 +505,7 @@ For technical issues with this code:
 
 ---
 
-## 🏁 Getting Started Checklist
+## Getting Started Checklist
 
 ```
 □ Install Python 3.8+
@@ -529,7 +529,7 @@ For technical issues with this code:
 
 <div align="center">
 
-**Built with ❤️ for African Agriculture**
+**Built with love for African Agriculture**
 
 *Open-source • Reproducible • Competition-ready*
 
